@@ -27,57 +27,47 @@ class Crop:
     def image_process(self):
         return None
 
-if __name__ == '__main__':
-    from PIL import Image
-    from scipy import misc
-    import tifffile as tf
-    import matplotlib.pyplot as plt
-
-    im = Image.open('Calibration/02-10-14_Film001.tif') # uses the Image module (PIL)
-    sx = ndimage.sobel(im, axis=0, mode='constant')
-    sy = ndimage.sobel(im, axis=1, mode='constant')
-    sob = np.hypot(sx, sy)
-    data = np.random.randint(0, 255, (256, 256, 3), 'uint8')
-    #imwrite('temp.tif', data, photometric='rgb')
-
-    tf.imread('temp.tif', data, photometric='rgb')
-    plt.imshow(im)
-    plt.show()
-    plt.imshow(data)
-    plt.show()
-
-"""
-    #Variables
-    color_depth = 16 #bits
-    image_names = "/home/filippo/Scrivania/Uni/MedicalPhysics_Summer2021/Given/02-10-14/7days/02-10-14_Film007_cropped.tif" #just get calibration filmes#
-
-    f = image_names
-    print(f)
-
-    # read in the image
-    im = cv2.imread(f, -1)
-
-    print(im.shape)
-
-    # for GaF scan only want the red part
-    # take the whole image and split into colors
+def OD(img):
+    #TODO: add possible modification of image color depth
+    #use openCV/cv2
+    im = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+    #print(im.shape)
+    if im.dtype =! 'uint16':
+        return f'Error, image is not 16bit color depth'
     redImage  = im[:,:,2]
-    greenImage = im[:,:,1]
-    blueImage = im[:,:,0]
-
-    # x values are flipped so reverse them
-    #redImage = np.flip(redImage,1)
-
-    print(redImage.dtype)
-
-    #inverts the colormap from a tiff for GaFChromic
-    color_levels = 2**int(color_depth) - 1
-    redImage = color_levels - redImage
-
-    #convert original image to optical density
-    OD = -np.log10(redImage/ float(color_levels))
+    redImage = 65535 - redImage
+    OD = -np.log10(redImage/65535.0)
 
     plt.figure()
     plt.imshow(OD)
     plt.show()
-"""
+
+
+if __name__ == '__main__':
+    sx = ndimage.sobel(im, axis=0, mode='constant')
+    from PIL import Image
+    from scipy import misc
+    import tifffile as tf
+    import matplotlib.pyplot as plt
+    import cv2
+
+    img = 'Calibration/02-10-14_Film001.tif'
+    """
+    #Pillow
+    im = Image.open(img) # uses the Image module (PIL)
+    #sobel filter
+
+    sy = ndimage.sobel(im, axis=1, mode='constant')
+    sob = np.hypot(sx, sy)
+    data = np.random.randint(0, 255, (256, 256, 3), 'uint8')
+    #imwrite('temp.tif', data, photometric='rgb')
+    #"""
+    """
+    image = tf.imread(img)
+    print(image.shape)
+    #plt.imshow(image)
+    #plt.show()
+    #"""
+    #"""
+
+    #"""
