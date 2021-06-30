@@ -16,7 +16,7 @@ import pdb
 #TODO: check libraries to be called in correct functions, clean stuff
 #TODO:
 
-class Crop:
+class Calibrate:
     def __init__(self, folder='./Calibration', extension='.tif'):
         self.PATH = folder
         self.file_list = []
@@ -28,9 +28,10 @@ class Crop:
     def process(self):
         return None
 
-    def ROI(self, i):
+    def __ROI(self, i):
         """
-        Written to make ROI selection automatic.
+        Note: Deprecated as not useful
+        Wrsitten to make ROI selection automatic.
         Currently, it does not work as the ROI still includes some white background
 
         Currently, this uses boundingRectange (https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html),
@@ -61,17 +62,21 @@ class Crop:
         cv2.destroyAllWindows()
 
     def manual_ROI(self, i):
-            img = f'{self.PATH}/{self.file_list[i]}'
-            image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
-            #ROI manual selection
-            x,y,w,h = cv2.selectROI(image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            ROI = image[y:y+h, x:x+w]
-            cv2.imshow(f'ROI {i+1}',ROI)
-            cv2.imwrite(f'{self.PATH}/ROI_auto_{i+1}.tif',ROI)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+        """
+        Manual ROI selection
+        """
+        #TODO: need to implement multiple ROI selection within same picture
+        img = f'{self.PATH}/{self.file_list[i]}'
+        image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        #ROI manual selection
+        x,y,w,h = cv2.selectROI(image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        ROI = image[y:y+h, x:x+w]
+        cv2.imshow(f'ROI {i+1}',ROI)
+        cv2.imwrite(f'{self.PATH}/ROI_auto_{i+1}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def manual_process(self):
         print(f'This is a manual process, proceed at your own risk\n\
