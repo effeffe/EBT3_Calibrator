@@ -12,11 +12,14 @@ import math
 import array
 import os
 import pdb
+import pickle
+
 
 #TODO: check libraries to be called in correct functions, clean stuff
 #TODO:
-
-class Calibrate:
+class Calibrate():
+#class Calibrate(dict):
+#Could initialise whole class as dictionary where self = self.Data
     def __init__(self, source='./Calibration', target = f'./Calibration/ROI', extension='.tif'):
         self.PATH_SOURCE = source
         self.PATH_TARGET = target
@@ -107,7 +110,8 @@ class Calibrate:
         redImage  = im[:,:,2]
         redImage = 65535 - redImage
         OD = -np.log10(redImage/65535.0)
-        pdb.set_trace()
+        #DEBUG
+        #pdb.set_trace()
         return OD
         #Maybe save it instead of show to make the process faster
 
@@ -138,16 +142,28 @@ class Calibrate:
         for i in range(len(self.file_list)):
             self.Data[i] = []
             self.ROI_single(i)
-            self.OD(i)
-            self.Data[i].append(OD_i)
+            self.Data[i].append(self.OD_avg(self.OD(i)))
             #user input: Gy
-            dose = input(f'Enter the dose of foil {i}')
+            dose = input(f'Enter the dose of foil {i}: ')
             self.Data[i].append(dose)
-            pdb.set_trace()
+            #DEBUG
+            #pdb.set_trace()
         return self.Data
 
+    def save(self, namefile):
+        """
+        Save Calibration to pickle file
+        """
+        with open( namefile + '.pkl', 'wb') as f:
+            pickle.dump(self.Data, f, pickle.HIGHEST_PROTOCOL)
+        return f'Saved'
 
+    def load(self, namefile):
+        with open(namefile + '.pkl', 'rb') as f:
+            self.Data = eval(repr(pickle.load(f)))
+
+#TODO: fitting of Calibration
 
 if __name__ == '__main__':
     a = Crop()
-    a.manual_process()
+    a.load('dictionary')
