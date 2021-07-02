@@ -66,10 +66,10 @@ class Calibrate():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def ROI_single(self, i):
+    def ROI_single_small(self, i):
         """
         Manual ROI selection
-        Uses OpenCV only
+        Uses OpenCV only. Image needs to be smaller than screen size. Also, it has issues with zoom in
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
@@ -86,7 +86,7 @@ class Calibrate():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def ROI_single_large(self, i):
+    def ROI_single(self, i):
         """
         Manual ROI selection
         Works on large files, but requries matplotlib
@@ -95,15 +95,19 @@ class Calibrate():
         #TODO: needs path selection capability and dest folder
         img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
         image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        image_8 = (image/256).astype('uint8')
+        #print(image_8.dtype)#To check that it is a 8bit image
         fig, current_ax = plt.subplots()
-        plt.imshow(image)
-        print("Select ROI, then press enter to close the Window")
+        plt.imshow(image_8)
+        #MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
+        print("Select ROI, then press Q/q to close the Window\n\
+            The program assumes the selection to be a square")
 
         # drawtype is 'box' or 'line' or 'none'
         toggle_selector.RS = RectangleSelector(current_ax, self.position,
             drawtype='box', useblit=True, button=[1, 3],  # don't use middle button
             minspanx=5, minspany=5, spancoords='pixels', interactive=True)
-        plt.connect('key_press_event', toggle_selector)
+        plt.connect('key_press_event', self.toggle_selector)
         plt.show()
         #pdb.set_trace()
         #ROI manual selection
@@ -111,15 +115,36 @@ class Calibrate():
         #cv2.waitKey(0)
         #cv2.destroyAllWindows()
 
-        x,y,w,h = self.ROI_data
-        ROI = image[y:y+h, x:x+w]
-        cv2.namedWindow("OpenCV", cv2.WINDOW_NORMAL)
-        ROI_small = cv2.resize(ROI, (1280, 720))
+        x1,y1,x2,y2 = self.ROI_data
+        print(x1,y1,x2,y2)
+        #pdb.set_trace()
+        ROI = image[y1:y2, x1:x2]
+        ROI_small = cv2.resize(ROI, (600, 600))#Resize picture to fit into screen
         cv2.imshow(f'ROI {i}',ROI_small)#Should use matplotlib for this?
+        #cv2.imshow(f'ROI {i}',ROI)
+        """
+        plt.figure()
+        plt.imshow(ROI)
+        plt.show()
+        #"""
         cv2.imwrite(f'{self.PATH_TARGET}/ROI_{i}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
         self.ROI_list.append(f'{self.PATH_TARGET}/ROI_{i}.tif')
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+    def toggle_selector(self, event):
+        print(f'{event.key} pressed')
+        #DEBUG:
+        #print(event.key)
+        #pdb.set_trace()
+        if event.key in ['Q', 'q']:# and toggle_selector.RS.active:
+            print(' RectangleSelector deactivated.')
+            toggle_selector.RS.set_active(False)
+        if event.key in ['A', 'a']:# and not toggle_selector.RS.active:
+            print(' RectangleSelector activated.')
+            toggle_selector.RS.set_active(True)
+        #if event.key in ['enter', 'Enter']:# toggle_selector.RS.active:
+        #    toggle_selector.RS.set_active(False)
 
     def position(self, eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
@@ -128,6 +153,7 @@ class Calibrate():
         #return self.ROI_data
 
     def ROI_all(self):
+        #Deprecatded
         """
         print(f'This is a manual process, proceed at your own risk\n\
             Create a box around ONE beam dot, do not include the white background.\
@@ -204,15 +230,6 @@ class Calibrate():
         with open(namefile + '.pkl', 'rb') as f:
             self.Data = eval(repr(pickle.load(f)))
 
-#MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
-#The following is debug only
-def line_select_callback(eclick, erelease):
-    'eclick and erelease are the press and release events'
-    x1, y1 = eclick.xdata, eclick.ydata
-    x2, y2 = erelease.xdata, erelease.ydata
-    print("(%3.2f, %3.2f) --> (%3.2f, %3.2f)" % (x1, y1, x2, y2))
-    print(" The button you used were: %s %s" % (eclick.button, erelease.button))
-    public_ROI = [x1,y1,x2,y2] #need to make this private,a s this is rubbish coding
 
 def toggle_selector(event):
     print(' Key pressed.')
@@ -224,7 +241,7 @@ def toggle_selector(event):
         print(' RectangleSelector activated.')
         toggle_selector.RS.set_active(True)
     """
-    if event.key in ['Enter'] and toggle_selector.RS.active:
+    if event.key in ['RETURN']: #and toggle_selector.RS.active:
         toggle_selector.RS.set_active(False)
 
 #TODO: fitting of Calibration
@@ -257,8 +274,8 @@ class Fitting():
 
 if __name__ == '__main__':
     #from Calib import Calibrate, Fitting
-    a = Calibrate('./')
-    a.ROI_single(2)
+    a = Calibrate('./','ROI')
+    a.ROI_single(0)
     #a.load('dictionary')
     #b = Fitting(a.Data)
     #b.plot()
