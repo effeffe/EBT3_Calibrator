@@ -204,7 +204,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         avg = np.sum(OD)/(len(OD)*len(OD[0]))
         return avg
 
-    def calibrate(self, time='1d'):
+    def calibrate(self, time='1d', instrument=None, location=None):
         """
         Process the OD of a ROI and save it to a dictionary
         """
@@ -212,6 +212,8 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         #TODO:
         self.Data = {}
         self.Data['time'] = time
+        self.Data['scanning instument'] = instrument
+        self.Data['scan location'] = location
         for i in range(len(self.file_list)):
             self.Data[i] = []
             self.ROI_single(i)
@@ -271,6 +273,10 @@ class Fitting():
         plt.show()
 
     def fit(self):
+        """
+        Fit the data to extract the proper calibration of the EBT3
+        NOTE: the calibration is specific to the acquisition instrument used
+        """
         return None
 
 if __name__ == '__main__':
