@@ -1,3 +1,3 @@
-import Calib
-a = Calib.Calibrate()
-a.calibrate() 
+from Calib import Calibrate, Fitting
+a = Calibrate()
+a.calibrate()
