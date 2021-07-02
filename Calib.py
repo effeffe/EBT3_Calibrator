@@ -69,6 +69,27 @@ class Calibrate():
     def ROI_single(self, i):
         """
         Manual ROI selection
+        Uses OpenCV only
+        """
+        #TODO: need to implement multiple ROI selection within same picture
+        #TODO: needs path selection capability and dest folder
+        img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
+        image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        #ROI manual selection
+        x,y,w,h = cv2.selectROI(image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        ROI = image[y:y+h, x:x+w]
+        cv2.imshow(f'ROI {i}',ROI)
+        cv2.imwrite(f'{self.PATH_TARGET}/ROI_{i}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
+        self.ROI_list.append(f'{self.PATH_TARGET}/ROI_{i}.tif')
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    def ROI_single_large(self, i):
+        """
+        Manual ROI selection
+        Works on large files, but requries matplotlib
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
@@ -76,7 +97,7 @@ class Calibrate():
         image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
         fig, current_ax = plt.subplots()
         plt.imshow(image)
-        print("\n      click  -->  release")
+        print("Select ROI, then press enter to close the Window")
 
         # drawtype is 'box' or 'line' or 'none'
         toggle_selector.RS = RectangleSelector(current_ax, self.position,
@@ -84,24 +105,26 @@ class Calibrate():
             minspanx=5, minspany=5, spancoords='pixels', interactive=True)
         plt.connect('key_press_event', toggle_selector)
         plt.show()
-        pdb.set_trace()
+        #pdb.set_trace()
         #ROI manual selection
         #x,y,w,h = cv2.selectROI(image)
         #cv2.waitKey(0)
         #cv2.destroyAllWindows()
+
         x,y,w,h = self.ROI_data
         ROI = image[y:y+h, x:x+w]
-        cv2.imshow(f'ROI {i}',ROI)#Should use matplotlib for this?
+        cv2.namedWindow("OpenCV", cv2.WINDOW_NORMAL)
+        ROI_small = cv2.resize(ROI, (1280, 720))
+        cv2.imshow(f'ROI {i}',ROI_small)#Should use matplotlib for this?
         cv2.imwrite(f'{self.PATH_TARGET}/ROI_{i}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
         self.ROI_list.append(f'{self.PATH_TARGET}/ROI_{i}.tif')
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
     def position(self, eclick, erelease):
-        self.ROI_data = []
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
-        self.ROI_data = [x1,y1,x2,y2]
+        self.ROI_data = [int(x1),int(y1),int(x2),int(y2)]
         #return self.ROI_data
 
     def ROI_all(self):
@@ -235,7 +258,7 @@ class Fitting():
 if __name__ == '__main__':
     #from Calib import Calibrate, Fitting
     a = Calibrate('./')
-    a.ROI_single(1)
+    a.ROI_single(2)
     #a.load('dictionary')
     #b = Fitting(a.Data)
     #b.plot()
