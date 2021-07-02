@@ -20,7 +20,7 @@ import pickle
 class Calibrate():
 #class Calibrate(dict):
 #Could initialise whole class as dictionary where self = self.Data
-    def __init__(self, source='./Calibration', target = f'./Calibration/ROI', extension='.tif'):
+    def __init__(self, source='./Calibration/24hours', target = f'./Calibration/24hours/ROI', extension='.tif'):
         self.PATH_SOURCE = source
         self.PATH_TARGET = target
         self.file_list = []
@@ -64,7 +64,7 @@ class Calibrate():
         cv2.imshow('ROI',ROI)
         cv2.imwrite(f'{self.PATH_TARGET}/ROI_auto_{i+1}.tif',ROI)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.destroyAllWindowCalibrate/s()
 
     def ROI_single_small(self, i):
         """
@@ -100,8 +100,10 @@ class Calibrate():
         fig, current_ax = plt.subplots()
         plt.imshow(image_8)
         #MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
-        print("Select ROI, then press Q/q to close the Window\n\
-            The program assumes the selection to be a square")
+        print(f'Select ROI, then press q to close the Window\n\
+Activate and deactivate ROI selection using a and d\n\
+The program shows a squared selected ROI, but the final image won\'t be like that')
+        #BUG: if use the keyboard selectors, self.Data remains empty and the ROI selection crashes
 
         # drawtype is 'box' or 'line' or 'none'
         toggle_selector.RS = RectangleSelector(current_ax, self.position,
@@ -133,15 +135,18 @@ class Calibrate():
         cv2.destroyAllWindows()
 
     def toggle_selector(self, event):
-        print(f'{event.key} pressed')
         #DEBUG:
+        #print(f'{event.key} pressed')
         #print(event.key)
         #pdb.set_trace()
         if event.key in ['Q', 'q']:# and toggle_selector.RS.active:
-            print(' RectangleSelector deactivated.')
+            print('RectangleSelector deactivated, exiting...')
+            toggle_selector.RS.set_active(False)
+        if event.key in ['D', 'd']:# and toggle_selector.RS.active:
+            print('RectangleSelector deactivated.')
             toggle_selector.RS.set_active(False)
         if event.key in ['A', 'a']:# and not toggle_selector.RS.active:
-            print(' RectangleSelector activated.')
+            print('RectangleSelector activated.')
             toggle_selector.RS.set_active(True)
         #if event.key in ['enter', 'Enter']:# toggle_selector.RS.active:
         #    toggle_selector.RS.set_active(False)
@@ -212,8 +217,8 @@ class Calibrate():
             self.ROI_single(i)
             self.Data[i].append(self.OD_avg(self.OD(i)))
             #user input: Gy
-            dose = input(f'Enter the dose of foil {i}: ')
-            self.Data[i].append(dose)
+            dose = input(f'Enter the dose of foil {self.file_list[i]}: ')
+            self.Data[i].append(float(dose))
             #DEBUG
             #pdb.set_trace()
         return self.Data
@@ -222,7 +227,7 @@ class Calibrate():
         """
         Save Calibration to pickle file
         """
-        with open( namefile + '.pkl', 'wb') as f:
+        with open(namefile + '.pkl', 'wb') as f:
             pickle.dump(self.Data, f, pickle.HIGHEST_PROTOCOL)
         return f'Saved'
 
@@ -232,17 +237,12 @@ class Calibrate():
 
 
 def toggle_selector(event):
-    print(' Key pressed.')
-    """
     if event.key in ['Q', 'q'] and toggle_selector.RS.active:
         print(' RectangleSelector deactivated.')
         toggle_selector.RS.set_active(False)
     if event.key in ['A', 'a'] and not toggle_selector.RS.active:
         print(' RectangleSelector activated.')
         toggle_selector.RS.set_active(True)
-    """
-    if event.key in ['RETURN']: #and toggle_selector.RS.active:
-        toggle_selector.RS.set_active(False)
 
 #TODO: fitting of Calibration
 class Fitting():
@@ -253,20 +253,21 @@ class Fitting():
         #pdb.set_trace()
         for i in data:
             if isinstance(i, int):
-                OD.append(data[i][0])
-                Dose.append(data[i][1])
+                OD.append(float(data[i][0]))
+                Dose.append(float(data[i][1]))
         #TODO: rearrange array as it is by increasing dose
-        self.Array = [OD, Dose]
+        self.Array = np.array([OD, Dose])
+        self.time = data['time']
 
     def plot(self):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        #ax.plot(self.Array[0], np.flip(self.Array[1]), 'bo', label='test')
-        ax.plot(self.Array[0], self.Array[1], 'bo', label='test')
-        ax.set_title('OD vs Dose')
+        ax.plot(self.Array[0], self.Array[1], 'bo', label=f'{self.time} developing time')
+        ax.set_title('Dose vs OD')
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
-        ax.legend(loc='upper left')
+        ax.legend()
+        plt.savefig(f'Calibration/{self.time}.png', dpi=600)
         plt.show()
 
     def fit(self):
@@ -274,8 +275,18 @@ class Fitting():
 
 if __name__ == '__main__':
     #from Calib import Calibrate, Fitting
+    """
     a = Calibrate('./','ROI')
     a.ROI_single(0)
-    #a.load('dictionary')
-    #b = Fitting(a.Data)
-    #b.plot()
+    #"""
+    #"""
+    d1 = Calibrate()
+    d1.load('Calibration/24h')
+    d1_fit = Fitting(d1.Data)
+    d1_fit.plot()
+
+    d7 = Calibrate()
+    d7.load('Calibration/7d')
+    d7_fit = Fitting(d7.Data)
+    d7_fit.plot()
+    #"""
