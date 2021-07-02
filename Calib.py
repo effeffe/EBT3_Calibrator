@@ -224,12 +224,14 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             #user input: Gy
             dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
             #CORRECT THIS
-            """
-            try:
-                dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
-            except ValueError:
-                print(f'Need an float value, try again')
-                dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+            #"""
+            while True:
+                try:
+                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+                    dose = int(dose)
+                    break
+                except ValueError:
+                    print(f'Need an float value, try again')
             #"""
             self.Data[i].append(float(dose))
             #DEBUG
