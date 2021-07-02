@@ -214,15 +214,37 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.Data['time'] = time
         self.Data['scanning instument'] = instrument
         self.Data['scan location'] = location
-        for i in range(len(self.file_list)):
+        i = 0
+        index = 0
+        #for i in range(len(self.file_list)):
+        while i <= len(self.file_list):
             self.Data[i] = []
-            self.ROI_single(i)
-            self.Data[i].append(self.OD_avg(self.OD(i)))
+            self.ROI_single(index)
+            self.Data[i].append(self.OD_avg(self.OD(index)))
             #user input: Gy
-            dose = input(f'Enter the dose of foil {self.file_list[i]}: ')
+            dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+            #CORRECT THIS
+            """
+            try:
+                dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+            except ValueError:
+                print(f'Need an float value, try again')
+                dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+            #"""
             self.Data[i].append(float(dose))
             #DEBUG
             #pdb.set_trace()
+            selector = input(f'Move to next image? [Y/n]')
+            if selector in ['Y','y','enter']:
+                if isinstance(i, int): i =+1
+                elif isinstance(i, float):
+                    index =+1
+                    i = index
+                    print(i,index)
+            elif selector in ['N','n']:
+                if isinstance(i, int): index = i
+                i = round(i+0.01,2)
+                print(i,index)
         return self.Data
 
     def save(self, namefile):
@@ -254,7 +276,7 @@ class Fitting():
         #DEBUG
         #pdb.set_trace()
         for i in data:
-            if isinstance(i, int):
+            if isinstance(i, int) or isinstance(i, float):
                 OD.append(float(data[i][0]))
                 Dose.append(float(data[i][1]))
         #TODO: rearrange array as it is by increasing dose
@@ -277,6 +299,7 @@ class Fitting():
         Fit the data to extract the proper calibration of the EBT3
         NOTE: the calibration is specific to the acquisition instrument used
         """
+
         return None
 
 if __name__ == '__main__':
