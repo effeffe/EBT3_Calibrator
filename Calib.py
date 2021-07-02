@@ -296,13 +296,26 @@ class Fitting():
         plt.savefig(f'Calibration/{self.time}.png', dpi=600)
         plt.show()
 
-    def fit(self):
+    def fit(self, x_min=0.05, x_max=0.25, samples=100):
         """
         Fit the data to extract the proper calibration of the EBT3
         NOTE: the calibration is specific to the acquisition instrument used
         """
+        #c, stats = np.polynomial.polynomial.polyfit(self.Array[0], self.Array[1], 2, full=True)
+        c = np.polyfit(self.Array[0], self.Array[1], 2)
+        fig = plt.figure()
+        ax = fig.add_subplot(1,1,1)
+        ax.plot(self.Array[0], self.Array[1], 'bo', label=f'{self.time} developing time')
+        x_fit = np.linspace(x_min, x_max, samples)
+        #DEBUG
+        #print(c)
+        func_fit = np.poly1d(c)
+        y_fit = func_fit(x_fit)
+        ax.plot(x_fit, y_fit, label=f'Fitting, c0={c[0]:.2f},\nc1={c[1]:.2f}, c2={c[2]:.2f}')
+        ax.legend()
+        plt.savefig(f'Calibration/Fitting_{self.time}.png', dpi=600)
+        plt.show()
 
-        return None
 
 if __name__ == '__main__':
     #from Calib import Calibrate, Fitting
@@ -315,9 +328,11 @@ if __name__ == '__main__':
     d1.load('Calibration/24h')
     d1_fit = Fitting(d1.Data)
     d1_fit.plot()
+    d1_fit.fit()
 
     d7 = Calibrate()
     d7.load('Calibration/7d')
     d7_fit = Fitting(d7.Data)
     d7_fit.plot()
+    d7_fit.fit()
     #"""
