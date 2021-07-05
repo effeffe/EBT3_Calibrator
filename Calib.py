@@ -24,14 +24,21 @@ class Calibrate():
         self.PATH_SOURCE = source
         self.PATH_TARGET = target
         self.file_list = []
+        self.extension = extension
         for file in os.listdir(self.PATH_SOURCE):
-            if file.endswith(extension):
+            if file.endswith(self.extension):
                 self.file_list.append(file)
         #pdb.set_trace()
         if not os.path.exists(self.PATH_TARGET):
             os.makedirs(self.PATH_TARGET)
         #else: return f'Error, the target directory must be empty'
         self.ROI_list = []
+
+    def load_ROIs(self):
+        for file in os.listdir(self.PATH_TARGET):
+            if file.endswith(self.extension):
+                self.ROI_list.append(file)
+        return f'ROIs loaded'
 
     def __ROI_automatic(self, i):
         """
@@ -176,13 +183,13 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         #use openCV/cv2
         #DEBUG:
         #pdb.set_trace()
-        im = cv2.imread(self.ROI_list[i], -1)#keep img as-is: 16bit tiff
-        print(im.shape)
+        im = cv2.imread(f'{self.PATH_TARGET}/{self.ROI_list[i]}', -1)#keep img as-is: 16bit tiff
+        #print(im.shape)
         if im.dtype != 'uint16':
             return f'Error, image is not 16bit color depth'
         redImage  = im[:,:,2]
-        redImage = 65535 - redImage
-        OD = -np.log10(redImage/65535.0)
+        #redImage = 65535 - redImage
+        OD = np.log10(65535.0/redImage)
         #DEBUG
         #pdb.set_trace()
         return OD
@@ -217,18 +224,18 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         i = 0
         index = 0
         #for i in range(len(self.file_list)):
-        while i <= len(self.file_list):
+        while i < len(self.file_list):
             self.Data[i] = []
             self.ROI_single(index)
             self.Data[i].append(self.OD_avg(self.OD(index)))
             #user input: Gy
-            dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+            #dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
             #CORRECT THIS
             #"""
             while True:
                 try:
                     dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
-                    dose = int(dose)
+                    dose = float(dose)
                     break
                 except ValueError:
                     print(f'Need an float value, try again')
@@ -236,18 +243,58 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             self.Data[i].append(float(dose))
             #DEBUG
             #pdb.set_trace()
+            """
             selector = input(f'Move to next image? [Y/n]')
-            if selector in ['Y','y','enter']:
-                if isinstance(i, int): i =+1
+            if selector in ['y', 'Y', 'Return', 'return', 'enter', 'Enter']:
+                #FIX: return/enter key does not work and goes to N/n
+                #Actually, none of the keys that are not the first one in list work
+                #pdb.set_trace()
+                if isinstance(i, int): i = i+1
                 elif isinstance(i, float):
-                    index =+1
-                    i = index
+                    index = i+1
+                    i = eval(repr(index))
                     print(i,index)
             elif selector in ['N','n']:
                 if isinstance(i, int): index = i
                 i = round(i+0.01,2)
                 print(i,index)
+            #"""
+            i = i+1
+            index = index+1
         return self.Data
+
+    def calibrate_noroi(self, time='1d', instrument=None, location=None):
+        """
+        function to calibrate using existing ROIs
+        """
+        self.Data = {}
+        self.Data['time'] = time
+        self.Data['scanning instument'] = instrument
+        self.Data['scan location'] = location
+        i = 0
+        index = 0
+        #for i in range(len(self.file_list)):
+        while i < len(self.ROI_list):
+            #pdb.set_trace()
+            self.Data[i] = []
+            self.Data[i].append(self.OD_avg(self.OD(index)))
+            #user input: Gy
+            #dose = input(f'Enter the dose of foil {self.ROI_list[index]}: ')
+            #CORRECT THIS
+            #"""
+            while True:
+                try:
+                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+                    dose = float(dose)
+                    break
+                except ValueError:
+                    print(f'Need an float value, try again')
+            #"""
+            self.Data[i].append(float(dose))
+            i = i+1
+            index = index+1
+        return self.Data
+
 
     def save(self, namefile):
         """
@@ -272,7 +319,7 @@ def toggle_selector(event):
 
 #TODO: fitting of Calibration
 class Fitting():
-    def __init__(self, data):
+    def __init__(self, data, path_out='Calibration'):
         OD = []
         Dose = []
         #DEBUG
@@ -284,6 +331,7 @@ class Fitting():
         #TODO: rearrange array as it is by increasing dose
         self.Array = np.array([OD, Dose])
         self.time = data['time']
+        self.PATH_out = path_out
 
     def plot(self):
         fig = plt.figure()
@@ -293,10 +341,10 @@ class Fitting():
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
         ax.legend()
-        plt.savefig(f'Calibration/{self.time}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/{self.time}.png', dpi=600)
         plt.show()
 
-    def fit(self, x_min=0.05, x_max=0.25, samples=100):
+    def fit(self, x_min=0.01, x_max=1.00, samples=1000):
         """
         Fit the data to extract the proper calibration of the EBT3
         NOTE: the calibration is specific to the acquisition instrument used
@@ -316,7 +364,7 @@ class Fitting():
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
         ax.legend()
-        plt.savefig(f'Calibration/Fitting_{self.time}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Fitting_{self.time}.png', dpi=600)
         plt.show()
 
 
@@ -326,7 +374,7 @@ if __name__ == '__main__':
     a = Calibrate('./','ROI')
     a.ROI_single(0)
     #"""
-    #"""
+    """
     d1 = Calibrate()
     d1.load('Calibration/24h')
     d1_fit = Fitting(d1.Data)
@@ -338,4 +386,13 @@ if __name__ == '__main__':
     d7_fit = Fitting(d7.Data)
     d7_fit.plot()
     d7_fit.fit()
+    #"""
+    #"""
+    d = Calibrate(source='Calibration', target='202105_UoB_Microbeam/ROI')
+    d.calibrate()
+    d.save('UoB_Data')
+    d_fit = Fitting(d1.Data)
+    d_fit.plot()
+    d_fit.fit()
+
     #"""
