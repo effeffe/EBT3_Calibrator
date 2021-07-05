@@ -8,3 +8,6 @@
 - definitely, add circular selection
 - add additional comments to the calibration
 - Add auxiliary class?
+
+- IMPORTANT: Add additional class Analyse to get dose out of optical density from a certain calibration
+-Add interpolatyion of calibrations
