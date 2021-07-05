@@ -16,11 +16,23 @@ import pickle
 
 
 #TODO: check libraries to be called in correct functions, clean stuff
-#TODO:
+
 class Calibrate():
 #class Calibrate(dict):
 #Could initialise whole class as dictionary where self = self.Data
-    def __init__(self, source='./Calibration/24hours', target = f'./Calibration/24hours/ROI', extension='.tif'):
+    """
+    Class to initialise the calibration of the gafchromic films
+    """
+    def __init__(self, source='./Calibration/1d', target = f'./Calibration/1d/ROI', extension='.tif'):
+        """
+        Initialises the class
+
+        Paramters
+        ---------
+        source: str, the folder in where the images of the films are stored
+        target: str, forlder in which to save the ROIs
+        extension: str, the extension of the images. Please specify the dot in front of it
+        """
         self.PATH_SOURCE = source
         self.PATH_TARGET = target
         self.file_list = []
@@ -35,6 +47,13 @@ class Calibrate():
         self.ROI_list = []
 
     def load_ROIs(self):
+        """
+        Load all the ROIs from self.PATH_TARGET folder.
+        Please keep this folder clean from any file that is not a ROI.
+        In theory, other files that are not ending with the specified extension could be placed here...
+
+        Returns a message (could be omitted)
+        """
         for file in os.listdir(self.PATH_TARGET):
             if file.endswith(self.extension):
                 self.ROI_list.append(file)
@@ -42,12 +61,16 @@ class Calibrate():
 
     def __ROI_automatic(self, i):
         """
-        Note: Deprecated as not useful
+        Note: Deprecated as not useful (actually, useful but requires much more work)
         Wrsitten to make ROI selection automatic.
         Currently, it does not work as the ROI still includes some white background
 
         Currently, this uses boundingRectange (https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html),
         but we could use a Sobel filter (https://docs.opencv.org/4.5.2/d5/d0f/tutorial_py_gradients.html)
+
+        Parameters
+        ----------
+        i: int, the index of the image in the file_list list
         """
         img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
         image_16 = cv2.imread(img, -1)#keep img as-is: 16bit tiff
@@ -76,7 +99,12 @@ class Calibrate():
     def ROI_single_small(self, i):
         """
         Manual ROI selection
-        Uses OpenCV only. Image needs to be smaller than screen size. Also, it has issues with zoom in
+        Uses OpenCV only. Image needs to be smaller than screen size.
+        Issues: zoom in; maybe cannot open large files
+
+        Parameters
+        ----------
+        i: int, the index of the image in the file_list list
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
@@ -94,9 +122,16 @@ class Calibrate():
         cv2.destroyAllWindows()
 
     def ROI_single(self, i):
+        #TODO: should break it in smaller functions
         """
-        Manual ROI selection
-        Works on large files, but requries matplotlib
+        Manual ROI selection: rectangular selection (need to add circular region)
+        Uses matplotlib, but works on large files.
+        The image is showed as an 8bit, but the image is processed as a 16bit one.
+        The final ROI is shown as a 16bit, saved in original size but shown on-screen as resized
+
+        Parameters
+        ----------
+        i: int, the index of the image in the file_list list
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
@@ -106,7 +141,6 @@ class Calibrate():
         #print(image_8.dtype)#To check that it is a 8bit image
         fig, current_ax = plt.subplots()
         plt.imshow(image_8)
-        #MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
         print(f'Select ROI, then press q to close the Window\n\
 Activate and deactivate ROI selection using a and d\n\
 The program shows a squared selected ROI, but the final image won\'t be like that')
@@ -125,11 +159,12 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         #cv2.destroyAllWindows()
 
         x1,y1,x2,y2 = self.ROI_data
-        print(x1,y1,x2,y2)
+        #DEBUG
+        #print(x1,y1,x2,y2)
         #pdb.set_trace()
         ROI = image[y1:y2, x1:x2]
         ROI_small = cv2.resize(ROI, (600, 600))#Resize picture to fit into screen
-        cv2.imshow(f'ROI {i}',ROI_small)#Should use matplotlib for this?
+        cv2.imshow(f'ROI {i}',ROI_small)
         #cv2.imshow(f'ROI {i}',ROI)
         """
         plt.figure()
@@ -158,42 +193,44 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         #if event.key in ['enter', 'Enter']:# toggle_selector.RS.active:
         #    toggle_selector.RS.set_active(False)
 
+#MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
     def position(self, eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
+        #write to this because toggle_selector.RS does not return anything
         self.ROI_data = [int(x1),int(y1),int(x2),int(y2)]
-        #return self.ROI_data
+        return None
 
     def ROI_all(self):
-        #Deprecatded
         """
-        print(f'This is a manual process, proceed at your own risk\n\
-            Create a box around ONE beam dot, do not include the white background.\
-            Press Enter after completing the selection')
-        #"""
+        Deprecatded function
+
+        Simply processes all the ROIs with a for loop
+        """
+        #print(f'This is a manual process, proceed at your own risk\n\
+        #    Create a box around ONE beam dot, do not include the white background.\
+        #    Press Enter after completing the selection')
         for i in range(len(self.file_list)):
             self.ROI_single(i)
         return f'All ROI extracted'
 
     def OD(self, i):
         """
-        Return Optical Density of a ROI
+        Calculate Optical density of a ROI
+
+        Parameter i: int, the index of the image in the file_list list
+        Returns Optical Density
         """
         #TODO: add possible modification of image color depth
-        #use openCV/cv2
-        #DEBUG:
-        #pdb.set_trace()
         im = cv2.imread(f'{self.PATH_TARGET}/{self.ROI_list[i]}', -1)#keep img as-is: 16bit tiff
-        #print(im.shape)
         if im.dtype != 'uint16':
             return f'Error, image is not 16bit color depth'
-        redImage  = im[:,:,2]
-        #redImage = 65535 - redImage
-        OD = np.log10(65535.0/redImage)
-        #DEBUG
+        #DEBUG:
         #pdb.set_trace()
+        #print(im.shape)
+        redImage  = im[:,:,2]
+        OD = np.log10(65535.0/redImage)
         return OD
-        #Maybe save it instead of show to make the process faster
 
     def OD_plot(self, OD):
         """
@@ -208,31 +245,33 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         """
         Averages the OD over the ROI area
         """
-        avg = np.sum(OD)/(len(OD)*len(OD[0]))
-        return avg
+        return np.sum(OD)/(len(OD)*len(OD[0]))
 
     def write_comments(self, time='1d', instrument=None, location=None, comments=None):
+        """
+        Function to write variables into the calibration dictionary
+        """
         self.Data = {}
         self.Data['time'] = time
         self.Data['scanning instument'] = instrument
         self.Data['scan location'] = location
         self.Data['comments'] = comments
-
+        return None
 
     def calibrate(self):
         """
-        Process the OD of a ROI and save it to a dictionary
+        Process all files, extract ROIs and their OD, then save it to a dictionary
         """
         #TODO: different acquisition time
-        #TODO:
         self.write_comments()
         i = 0
         index = 0
-        #for i in range(len(self.file_list)):
         while i < len(self.file_list):
             self.Data[i] = []
             self.ROI_single(index)
             self.Data[i].append(self.OD_avg(self.OD(index)))
+            #User input
+            #TODO: add eventual load of stuff from external file or namefile > into separate function
             while True:
                 try:
                     dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#user input: Gy
@@ -241,9 +280,10 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
                 except ValueError:
                     print(f'Need an float value, try again')
             self.Data[i].append(float(dose))
+
             #DEBUG
             #pdb.set_trace()
-            """
+            #"""
             selector = input(f'Move to next image? [Y/n]')
             if selector in ['y', 'Y', 'Return', 'return', 'enter', 'Enter']:
                 #FIX: return/enter key does not work and goes to N/n
@@ -259,13 +299,13 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
                 i = round(i+0.01,2)
                 print(i,index)
             #"""
-            i = i+1
-            index = index+1
+            #i = i+1
+            #index = index+1
         return self.Data
 
     def calibrate_noroi(self, time='1d', instrument=None, location=None):
         """
-        function to calibrate using existing ROIs
+        Like calibrate but with existing ROIs
         """
         self.write_comments()
         i = 0
@@ -289,18 +329,24 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
 
     def save(self, namefile):
         """
-        Save Calibration to pickle file
+        Save Calibration to pickle file.
+        Save as binary
         """
         with open(namefile + '.pkl', 'wb') as f:
-            pickle.dump(self.Data, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.Data, f,  pickle.DEFAULT_PROTOCOL)
+            #use default protocol to make it compatible with python 3.4 and followings
         return f'Saved'
 
     def load(self, namefile):
+        """
+        Load Calibration from pickle file
+        """
         with open(namefile + '.pkl', 'rb') as f:
             self.Data = eval(repr(pickle.load(f)))
 
 
 def toggle_selector(event):
+
     if event.key in ['Q', 'q'] and toggle_selector.RS.active:
         print(' RectangleSelector deactivated.')
         toggle_selector.RS.set_active(False)
