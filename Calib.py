@@ -336,7 +336,7 @@ class Fitting():
     def plot(self):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(self.Array[0], self.Array[1], 'bo', label=f'{self.time} developing time')
+        ax.plot(self.Array[0], self.Array[1], 'rx', label=f'{self.time} developing time')
         ax.set_title('Dose vs OD')
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
@@ -353,13 +353,13 @@ class Fitting():
         c = np.polyfit(self.Array[0], self.Array[1], 2)
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
-        ax.plot(self.Array[0], self.Array[1], 'bo', label=f'{self.time} developing time')
+        ax.plot(self.Array[0], self.Array[1], 'rx', label=f'{self.time} developing time')
         x_fit = np.linspace(x_min, x_max, samples)
         #DEBUG
         #print(c)
         func_fit = np.poly1d(c)
         y_fit = func_fit(x_fit)
-        ax.plot(x_fit, y_fit, label=f'Fitting, c0={c[0]:.2f},\nc1={c[1]:.2f}, c2={c[2]:.2f}')
+        ax.plot(x_fit, y_fit, 'b', label=f'Fitting, c0={c[0]:.2f},\nc1={c[1]:.2f}, c2={c[2]:.2f}')
         ax.set_title('Dose vs OD')
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
@@ -389,9 +389,8 @@ if __name__ == '__main__':
     #"""
     #"""
     d = Calibrate(source='Calibration', target='202105_UoB_Microbeam/ROI')
-    d.calibrate()
-    d.save('UoB_Data')
-    d_fit = Fitting(d1.Data)
+    d.load('Calibration/Calibration_UoB')
+    d_fit = Fitting(d.Data)
     d_fit.plot()
     d_fit.fit()
 
