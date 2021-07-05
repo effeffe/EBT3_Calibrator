@@ -211,16 +211,21 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         avg = np.sum(OD)/(len(OD)*len(OD[0]))
         return avg
 
-    def calibrate(self, time='1d', instrument=None, location=None):
+    def write_comments(self, time='1d', instrument=None, location=None, comments=None):
+        self.Data = {}
+        self.Data['time'] = time
+        self.Data['scanning instument'] = instrument
+        self.Data['scan location'] = location
+        self.Data['comments'] = comments
+
+
+    def calibrate(self):
         """
         Process the OD of a ROI and save it to a dictionary
         """
         #TODO: different acquisition time
         #TODO:
-        self.Data = {}
-        self.Data['time'] = time
-        self.Data['scanning instument'] = instrument
-        self.Data['scan location'] = location
+        self.write_comments()
         i = 0
         index = 0
         #for i in range(len(self.file_list)):
@@ -228,18 +233,13 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             self.Data[i] = []
             self.ROI_single(index)
             self.Data[i].append(self.OD_avg(self.OD(index)))
-            #user input: Gy
-            #dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
-            #CORRECT THIS
-            #"""
             while True:
                 try:
-                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#user input: Gy
                     dose = float(dose)
                     break
                 except ValueError:
                     print(f'Need an float value, try again')
-            #"""
             self.Data[i].append(float(dose))
             #DEBUG
             #pdb.set_trace()
@@ -267,10 +267,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         """
         function to calibrate using existing ROIs
         """
-        self.Data = {}
-        self.Data['time'] = time
-        self.Data['scanning instument'] = instrument
-        self.Data['scan location'] = location
+        self.write_comments()
         i = 0
         index = 0
         #for i in range(len(self.file_list)):
@@ -278,23 +275,17 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             #pdb.set_trace()
             self.Data[i] = []
             self.Data[i].append(self.OD_avg(self.OD(index)))
-            #user input: Gy
-            #dose = input(f'Enter the dose of foil {self.ROI_list[index]}: ')
-            #CORRECT THIS
-            #"""
             while True:
                 try:
-                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')
+                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#Gy
                     dose = float(dose)
                     break
                 except ValueError:
                     print(f'Need an float value, try again')
-            #"""
             self.Data[i].append(float(dose))
             i = i+1
             index = index+1
         return self.Data
-
 
     def save(self, namefile):
         """
@@ -317,7 +308,7 @@ def toggle_selector(event):
         print(' RectangleSelector activated.')
         toggle_selector.RS.set_active(True)
 
-#TODO: fitting of Calibration
+
 class Fitting():
     def __init__(self, data, path_out='Calibration'):
         OD = []
