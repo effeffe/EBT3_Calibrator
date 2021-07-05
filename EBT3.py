@@ -1,18 +1,20 @@
 #!/usr/bin/python3
 
 import numpy as np
-#from libtiff import TIFF
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector
-from scipy import ndimage
-from PIL import Image
-import tifffile as tf
 import cv2
 import math
 import array
 import os
 import pdb
 import pickle
+
+#TODO: check if these are needed
+from scipy import ndimage
+from PIL import Image
+#from libtiff import TIFF
+import tifffile as tf
 
 
 #TODO: check libraries to be called in correct functions, clean stuff
