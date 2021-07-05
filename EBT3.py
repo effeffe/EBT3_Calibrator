@@ -224,7 +224,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         Returns Optical Density
         """
         #TODO: add possible modification of image color depth
-        im = cv2.imread(f'{self.PATH_TARGET}/{self.ROI_list[i]}', -1)#keep img as-is: 16bit tiff
+        im = cv2.imread(f'{self.ROI_list[i]}', -1)#keep img as-is: 16bit tiff
         if im.dtype != 'uint16':
             return f'Error, image is not 16bit color depth'
         #DEBUG:
@@ -260,6 +260,37 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.Data['comments'] = comments
         return None
 
+    def dose_input(self, index):
+        """
+        User input
+
+        TODO: add eventual load of stuff from external file or namefile > into separate function
+        """
+        while True:
+            try:
+                dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#user input: Gy
+                dose = float(dose)
+                break
+            except ValueError:
+                print(f'Need an float value, try again')
+        return dose
+
+    def selector(self, i, index):
+        selector = input(f'Move to next image? [Y/n]')
+        if selector in ['y', 'Y', '']: #The '' is the return key
+            if isinstance(i, int):
+                i =+ 1
+                index =+ 1
+            elif isinstance(i, float):
+                index = i+1
+                i = eval(repr(index))
+        elif selector in ['N','n']:
+            if isinstance(i, int):
+                index = i
+            i = round(i+0.001,3)
+        print(i,index)
+        return [i, index]
+
     def calibrate(self):
         """
         Process all files, extract ROIs and their OD, then save it to a dictionary
@@ -272,37 +303,11 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             self.Data[i] = []
             self.ROI_single(index)
             self.Data[i].append(self.OD_avg(self.OD(index)))
-            #User input
-            #TODO: add eventual load of stuff from external file or namefile > into separate function
-            while True:
-                try:
-                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#user input: Gy
-                    dose = float(dose)
-                    break
-                except ValueError:
-                    print(f'Need an float value, try again')
-            self.Data[i].append(float(dose))
+            self.Data[i].append(float(self.dose_input(index)))
 
             #DEBUG
             #pdb.set_trace()
-            #"""
-            selector = input(f'Move to next image? [Y/n]')
-            if selector in ['y', 'Y', 'Return', 'return', 'enter', 'Enter']:
-                #FIX: return/enter key does not work and goes to N/n
-                #Actually, none of the keys that are not the first one in list work
-                #pdb.set_trace()
-                if isinstance(i, int): i = i+1
-                elif isinstance(i, float):
-                    index = i+1
-                    i = eval(repr(index))
-                    print(i,index)
-            elif selector in ['N','n']:
-                if isinstance(i, int): index = i
-                i = round(i+0.01,2)
-                print(i,index)
-            #"""
-            #i = i+1
-            #index = index+1
+            i,index = self.selector(i,index)
         return self.Data
 
     def calibrate_noroi(self, time='1d', instrument=None, location=None):
@@ -317,16 +322,9 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             #pdb.set_trace()
             self.Data[i] = []
             self.Data[i].append(self.OD_avg(self.OD(index)))
-            while True:
-                try:
-                    dose = input(f'Enter the dose of foil {self.file_list[index]}: ')#Gy
-                    dose = float(dose)
-                    break
-                except ValueError:
-                    print(f'Need an float value, try again')
-            self.Data[i].append(float(dose))
-            i = i+1
-            index = index+1
+            self.Data[i].append(float(self.dose_input(index)))
+
+            i,index = self.selector(i,index)
         return self.Data
 
     def save(self, namefile):
@@ -348,7 +346,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
 
 
 def toggle_selector(event):
-
+    #Should be able to just keep it as return None
     if event.key in ['Q', 'q'] and toggle_selector.RS.active:
         print(' RectangleSelector deactivated.')
         toggle_selector.RS.set_active(False)
