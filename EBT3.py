@@ -1,4 +1,13 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+@author: Filippo Falezza
+<filippo dot falezza at outlook dot it>
+<fxf802 at student dot bham dot ac dot uk>
+
+Released under GPLv3 and followings
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -276,6 +285,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         return dose
 
     def selector(self, i, index):
+        #TODO: test i and index increments to see whether it works
         selector = input(f'Move to next image? [Y/n]')
         if selector in ['y', 'Y', '']: #The '' is the return key
             if isinstance(i, int):
@@ -381,7 +391,7 @@ class Fitting():
         plt.savefig(f'{self.PATH_out}/{self.time}.png', dpi=600)
         plt.show()
 
-    def fit(self, x_min=0.01, x_max=1.00, samples=1000):
+    def fit(self, samples=1000, x_min=None, x_max=None ):
         """
         Fit the data to extract the proper calibration of the EBT3
         NOTE: the calibration is specific to the acquisition instrument used
@@ -391,6 +401,8 @@ class Fitting():
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
         ax.plot(self.Array[0], self.Array[1], 'rx', label=f'{self.time} developing time')
+        if x_min is None: x_min = np.min(self.Array[0])
+        if x_max is None: x_max = np.max(self.Array[0])
         x_fit = np.linspace(x_min, x_max, samples)
         #DEBUG
         #print(c)
