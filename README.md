@@ -8,13 +8,20 @@
 
 ## Introduction
 This software was written as a part of a summer project organised by Dr TOny Price at thee University of Birmingham. The software is written by Filippo Faleza (© 2021) and released under GNU General Public License v3 and followings.
+
 ## Installation
 The program is composed of three main parts: 
-- Main (todo)
+- EBT3.py, the core library
 - CLI (todo)
 - GUI (todo)
 
-These can simply be run using python 3.
+### Requirements
+Python 3.4 or later (tested using python 3.9.5)
+Matplotlib
+NumPy
+OpenCV (cv2)
+These can simply be run using python 3.4 and later
+
 ## Usage
 The software is composed of two main classes: Calibrate and Fitting. 
 
