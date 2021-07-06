@@ -481,12 +481,16 @@ if __name__ == '__main__':
     f.fit()
     #d.ROI_single(6)
     OD = d.OD(i, roi=1)
-    Dose = f.coeff[0]*(OD**2)+f.coeff[1]*(OD)+f.coeff[2]
+    Dose = f.coeff[0]*(OD**2)+f.coeff[1]*(np.abs(OD))+f.coeff[2]
     fig = plt.subplots()
     plt.imshow(Dose)
     print(np.max(Dose))
     plt.colorbar()
     plt.savefig(f'{d.PATH_TARGET}/Dose_plot_Film9.png', dpi=600)
+    plt.show()
+
+    fig = plt.subplots()
+    n = plt.hist(Dose.ravel(), bins=1000)
     plt.show()
     #The above needs to have file list and PATH separated.
     #"""
