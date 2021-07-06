@@ -37,6 +37,9 @@ def plot_map(input):
         return None
 
 def toggle_selector(event):
+    """
+    Useless function, do not remove as this would break the code (ROI selection)
+    """
     return None
 
 class Files:
@@ -327,11 +330,17 @@ class Fitting(Files,Analysis):
         plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
         plt.show()
 
-#TODO: check load/save for Fitting
+    #the following replace some inherited functions
+    def load(self, namefile):
+        self.Data = np.load(namefile + '.npy')
+
+    def save(self, namefile):
+        np.save(namefile, self.Data)
+
 
 if __name__ == '__main__':
     """
-    #from EBT3 import *
+    #from EBT3 import File, Analysis, Calibration, Fitting
     #c = Calibrate('202105_UoB_Microbeam/Films/','Calibration/ROI')
     c = Calibrate('Calibration','Calibration/ROI')
     #c.calibrate()
@@ -345,11 +354,14 @@ if __name__ == '__main__':
     f.dose_map(6, 1)
     f.dose_hist(6, 1)
     #"""
+
     #"""
-    #from EBT3 import *
+    #from EBT3 import File, Analysis, Calibration, Fitting
     c = Calibrate('Calibration','Calibration/ROI')
     c.load(f'{c.PATH[0]}/Calibration_UoB')
     f = Fitting(c.Data, source='Calibration')
     f.load(f'{f.PATH_out}/Fit')
-    print(f.Data)
+    f.fit_plot()
+    f.dose_map(6, 1)
+    f.dose_hist(6, 1)
     #"""
