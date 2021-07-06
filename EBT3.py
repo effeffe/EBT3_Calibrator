@@ -56,6 +56,7 @@ class Calibrate():
             os.makedirs(self.PATH_TARGET)
         #else: return f'Error, the target directory must be empty'
         self.ROI_list = []
+        self.load_ROIs()
 
     def __image_open__(self, i, flag=0):
         """
@@ -77,7 +78,6 @@ class Calibrate():
         for file in os.listdir(self.PATH_TARGET):
             if file.endswith(self.extension):
                 self.ROI_list.append(f'{self.PATH_TARGET}/{file}')
-        return f'ROIs loaded'
 
     def __ROI_automatic(self, i):
         """
@@ -231,7 +231,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             self.ROI_single(i)
         return f'All ROI extracted'
 
-    def OD(self, i, type=int(2)):
+    def OD(self, i, type=int(2), roi=1):
         """
         Calculate Optical density of a ROI
 
@@ -242,7 +242,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         Returns Optical Density
         """
         #TODO: add possible modification of image color depth
-        im = self.__image_open__(i, 1)
+        im = self.__image_open__(i, roi)
         if im.dtype != 'uint16':
             return f'Error, image is not 16bit color depth'
         channelImage  = im[:,:,type]
@@ -393,6 +393,7 @@ class Fitting():
         """
         #c, stats = np.polynomial.polynomial.polyfit(self.Array[0], self.Array[1], 2, full=True)
         c = np.polyfit(self.Array[0], self.Array[1], 2)
+        self.coeff = c
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
         ax.plot(self.Array[0], self.Array[1], 'rx', label=f'{self.time} developing time')
@@ -403,7 +404,7 @@ class Fitting():
         #print(c)
         func_fit = np.poly1d(c)
         y_fit = func_fit(x_fit)
-        ax.plot(x_fit, y_fit, 'b', label=f'Fitting, c0={c[0]:.2f},\nc1={c[1]:.2f}, c2={c[2]:.2f}')
+        ax.plot(x_fit, y_fit, 'b', label=f'Fitting ax\u00b2+bx+c, a={c[0]:.2f},\nb={c[1]:.2f}, c={c[2]:.2f}')
         ax.set_title('Dose vs OD')
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
@@ -411,6 +412,46 @@ class Fitting():
         plt.savefig(f'{self.PATH_out}/Fitting_{self.time}.png', dpi=600)
         plt.show()
 
+    def save(self, namefile):
+        """
+        Save Calibration to pickle file.
+        """
+        with open(namefile + '.pkl', 'wb') as f:
+            pickle.dump(self.coeff, f,  pickle.DEFAULT_PROTOCOL)
+            #use default protocol to make it compatible with python 3.4 and followings
+
+    def load(self, namefile):
+        """
+        Load Calibration from pickle file
+        """
+        with open(namefile + '.pkl', 'rb') as f:
+            self.coeff = eval(repr(pickle.load(f)))
+
+class Analysis():
+    def __init__(self, calib_class, fit_class):
+        self.calib_class = calib_class
+        self.fit_class = fit_class
+
+    def Map_Dose(self, i, channel=int(2)):
+        image = self.calib_class.__image_open__(i,1)
+
+        OD = np.log10(65535.0/image[:,:,channel])
+        Dose = self.fit_class.coeff[0]*(OD**2)+self.fit_class.coeff[1]*(OD)+self.fit_class.coeff[2]
+        return Dose
+
+#general stuff
+def plot_image(input):
+        plt.figure()
+        plt.imshow(input)
+        plt.show()
+        return None
+
+def plot_map(input):
+        plt.figure()
+        plt.imshow(input)
+        plt.colorbar()
+        plt.show()
+        return None
 
 if __name__ == '__main__':
     #from Calib import Calibrate, Fitting
@@ -432,10 +473,20 @@ if __name__ == '__main__':
     d7_fit.fit()
     #"""
     #"""
-    d = Calibrate(source='Calibration', target='202105_UoB_Microbeam/ROI')
+    #index of pircture to analyse
+    i = 6
+    d = Calibrate('202105_UoB_Microbeam/Films/','Calibration/ROI')
     d.load('Calibration/Calibration_UoB')
-    d_fit = Fitting(d.Data)
-    d_fit.plot()
-    d_fit.fit()
-
+    f = Fitting(d.Data)
+    f.fit()
+    #d.ROI_single(6)
+    OD = d.OD(i, roi=1)
+    Dose = f.coeff[0]*(OD**2)+f.coeff[1]*(OD)+f.coeff[2]
+    fig = plt.subplots()
+    plt.imshow(Dose)
+    print(np.max(Dose))
+    plt.colorbar()
+    plt.savefig(f'{d.PATH_TARGET}/Dose_plot_Film9.png', dpi=600)
+    plt.show()
+    #The above needs to have file list and PATH separated.
     #"""
