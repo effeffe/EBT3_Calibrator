@@ -57,6 +57,15 @@ class Calibrate():
         #else: return f'Error, the target directory must be empty'
         self.ROI_list = []
 
+    def __image_open__(self, i, flag=0):
+        """
+        Open picture
+        flag: 0 for file, 1 for ROI
+        """
+        if flag == 0: img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
+        elif flag == 1: img = f'{self.ROI_list[i]}'
+        return cv2.imread(img, -1)#keep img as-is: 16bit tiff
+
     def load_ROIs(self):
         """
         Load all the ROIs from self.PATH_TARGET folder.
@@ -83,8 +92,7 @@ class Calibrate():
         ----------
         i: int, the index of the image in the file_list list
         """
-        img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
-        image_16 = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        image_16 = self.__image_open__(i)
         gray = cv2.cvtColor((image_16/256).astype('uint8'), cv2.COLOR_BGR2GRAY)#Work on 8bit gray image
         gray = cv2.bitwise_not(gray)#invert colors to get boundingBox
 
@@ -119,8 +127,7 @@ class Calibrate():
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
-        img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
-        image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        image = self.__image_open__(i)
         #ROI manual selection
         x,y,w,h = cv2.selectROI(image)
         cv2.waitKey(0)
@@ -146,8 +153,7 @@ class Calibrate():
         """
         #TODO: need to implement multiple ROI selection within same picture
         #TODO: needs path selection capability and dest folder
-        img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
-        image = cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        image = self.__image_open__(i)
         image_8 = (image/256).astype('uint8')
         #print(image_8.dtype)#To check that it is a 8bit image
         fig, current_ax = plt.subplots()
@@ -225,22 +231,22 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
             self.ROI_single(i)
         return f'All ROI extracted'
 
-    def OD(self, i):
+    def OD(self, i, type=int(2)):
         """
         Calculate Optical density of a ROI
 
-        Parameter i: int, the index of the image in the file_list list
+        Parameters
+        ----------
+        i: int, the index of the image in the file_list list
+        type: int, the color channel to use. 2 is red, 1 is green, 0 is blue
         Returns Optical Density
         """
         #TODO: add possible modification of image color depth
-        im = cv2.imread(f'{self.ROI_list[i]}', -1)#keep img as-is: 16bit tiff
+        im = self.__image_open__(i, 1)
         if im.dtype != 'uint16':
             return f'Error, image is not 16bit color depth'
-        #DEBUG:
-        #pdb.set_trace()
-        #print(im.shape)
-        redImage  = im[:,:,2]
-        OD = np.log10(65535.0/redImage)
+        channelImage  = im[:,:,type]
+        OD = np.log10(65535.0/channelImage)
         return OD
 
     def OD_plot(self, OD):
@@ -258,7 +264,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         """
         return np.sum(OD)/(len(OD)*len(OD[0]))
 
-    def write_comments(self, time='1d', instrument=None, location=None, comments=None):
+    def __write_comments__(self, time='1d', instrument=None, location=None, comments=None):
         """
         Function to write variables into the calibration dictionary
         """
@@ -269,7 +275,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.Data['comments'] = comments
         return None
 
-    def dose_input(self, index):
+    def __dose_input__(self, index):
         """
         User input
 
@@ -284,7 +290,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
                 print(f'Need an float value, try again')
         return dose
 
-    def selector(self, i, index):
+    def __image_selector__(self, i, index):
         #TODO: test i and index increments to see whether it works
         selector = input(f'Move to next image? [Y/n]')
         if selector in ['y', 'Y', '']: #The '' is the return key
@@ -301,46 +307,29 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         print(i,index)
         return [i, index]
 
-    def calibrate(self):
+    def calibrate(self, ROI=0, time='1d', instrument=None, location=None, comments=None, color=int(2)):
         """
         Process all files, extract ROIs and their OD, then save it to a dictionary
+        Parameters
+        ----------
+        ROI: int, enable use of pre-existing ROIs. 0 to select ROIs, 1 to use pre-existing ROIs
+
+        Returns a dictionary with the calibration info
         """
-        #TODO: different acquisition time
-        self.write_comments()
+        self.__write_comments__(time, instrument, location, comments)
         i = 0
         index = 0
         while i < len(self.file_list):
             self.Data[i] = []
-            self.ROI_single(index)
-            self.Data[i].append(self.OD_avg(self.OD(index)))
-            self.Data[i].append(float(self.dose_input(index)))
-
-            #DEBUG
-            #pdb.set_trace()
-            i,index = self.selector(i,index)
-        return self.Data
-
-    def calibrate_noroi(self, time='1d', instrument=None, location=None):
-        """
-        Like calibrate but with existing ROIs
-        """
-        self.write_comments()
-        i = 0
-        index = 0
-        #for i in range(len(self.file_list)):
-        while i < len(self.ROI_list):
-            #pdb.set_trace()
-            self.Data[i] = []
-            self.Data[i].append(self.OD_avg(self.OD(index)))
-            self.Data[i].append(float(self.dose_input(index)))
-
-            i,index = self.selector(i,index)
+            if ROI == 0: self.ROI_single(index)
+            self.Data[i].append(self.OD_avg(self.OD(index, color)))
+            self.Data[i].append(float(self.__dose_input__(index)))
+            i,index = self.__image_selector__(i,index)
         return self.Data
 
     def save(self, namefile):
         """
         Save Calibration to pickle file.
-        Save as binary
         """
         with open(namefile + '.pkl', 'wb') as f:
             pickle.dump(self.Data, f,  pickle.DEFAULT_PROTOCOL)
