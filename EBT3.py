@@ -50,7 +50,7 @@ class Calibrate():
         self.extension = extension
         for file in os.listdir(self.PATH_SOURCE):
             if file.endswith(self.extension):
-                self.file_list.append(file)
+                self.file_list.append(f'{self.PATH_SOURCE}/{file}')
         #pdb.set_trace()
         if not os.path.exists(self.PATH_TARGET):
             os.makedirs(self.PATH_TARGET)
@@ -62,7 +62,7 @@ class Calibrate():
         Open picture
         flag: 0 for file, 1 for ROI
         """
-        if flag == 0: img = f'{self.PATH_SOURCE}/{self.file_list[i]}'
+        if flag == 0: img = f'{self.file_list[i]}'
         elif flag == 1: img = f'{self.ROI_list[i]}'
         return cv2.imread(img, -1)#keep img as-is: 16bit tiff
 
@@ -76,7 +76,7 @@ class Calibrate():
         """
         for file in os.listdir(self.PATH_TARGET):
             if file.endswith(self.extension):
-                self.ROI_list.append(file)
+                self.ROI_list.append(f'{self.PATH_TARGET}/{file}')
         return f'ROIs loaded'
 
     def __ROI_automatic(self, i):
@@ -115,7 +115,7 @@ class Calibrate():
         cv2.waitKey(0)
         cv2.destroyAllWindowCalibrate/s()
 
-    def ROI_single_small(self, i):
+    def __ROI_single_small(self, i):
         """
         Manual ROI selection
         Uses OpenCV only. Image needs to be smaller than screen size.
@@ -264,7 +264,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         """
         return np.sum(OD)/(len(OD)*len(OD[0]))
 
-    def __write_comments__(self, time='1d', instrument=None, location=None, comments=None):
+    def __write_comments__(self, time, instrument, location, comments):
         """
         Function to write variables into the calibration dictionary
         """
@@ -291,20 +291,26 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         return dose
 
     def __image_selector__(self, i, index):
-        #TODO: test i and index increments to see whether it works
+        """
+        Function to analyse multiple ROIs within the same image.
+        Supports up 999 images. Tested
+        """
         selector = input(f'Move to next image? [Y/n]')
         if selector in ['y', 'Y', '']: #The '' is the return key
+            pdb.set_trace()
             if isinstance(i, int):
-                i =+ 1
-                index =+ 1
+                i += 1
+                index += 1
             elif isinstance(i, float):
-                index = i+1
+                index += 1
                 i = eval(repr(index))
         elif selector in ['N','n']:
+            pdb.set_trace()
             if isinstance(i, int):
                 index = i
             i = round(i+0.001,3)
         print(i,index)
+        pdb.set_trace()
         return [i, index]
 
     def calibrate(self, ROI=0, time='1d', instrument=None, location=None, comments=None, color=int(2)):
