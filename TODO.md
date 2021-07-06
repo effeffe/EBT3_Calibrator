@@ -10,4 +10,4 @@
 - Add auxiliary class?
 
 - IMPORTANT: Add additional class Analyse to get dose out of optical density from a certain calibration
--Add interpolatyion of calibrations
+- Add interpolatyion of calibrations
