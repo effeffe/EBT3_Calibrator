@@ -1,5 +1,5 @@
 # TODO
-
+## General
 - see literature for two and three color correction
 - Often, use blue to correct for red errors
 - see matlab software for additional features to implement
@@ -9,5 +9,8 @@
 - add additional comments to the calibration
 - Add auxiliary class?
 
-- IMPORTANT: Add additional class Analyse to get dose out of optical density from a certain calibration
+## Analysis
 - Add interpolatyion of calibrations
+
+## Dose Plot
+- Low pass filter to remove Dose noise
