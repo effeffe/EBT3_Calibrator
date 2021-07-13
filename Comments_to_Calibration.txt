@@ -1,0 +1,4 @@
+from EBT3 import Calibrate, Fitting
+d = Calibrate('Calibration','Calibration/ROI')
+d.load_ROIs()
+d.calibrate(ROI=1, time='48h', instrument='Epson Expression 10000XL', location='NPL', comments='Irradiated at the MC40 cyclotron at the University of Birmingham; Scanned by Sam Flynn at NPL', color=2)

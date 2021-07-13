@@ -1,0 +1,107 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+@author: Filippo Falezza
+<filippo dot falezza at outlook dot it>
+<fxf802 at student dot bham dot ac dot uk>
+
+Released under GPLv3 and followings
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import RectangleSelector
+import cv2
+import math
+import array
+import os
+import pdb
+import pickle
+
+def PATH_set(source='./Calibration/1d', target = f'./Calibration/1d/ROI', extension='.tif'):
+    PATH = [source, target, extension]
+    return PATH
+    
+def plot_image(input):
+        plt.figure()
+        plt.imshow(input)
+        plt.show()
+        return None
+
+def plot_map(input):
+        plt.figure()
+        plt.imshow(input)
+        plt.colorbar()
+        plt.show()
+        return None
+
+class Files:
+    def __init__(self):
+        self.PATH_SOURCE = source
+        self.PATH_TARGET = target
+        self.file_list = []
+        self.extension = extension
+        for file in os.listdir(self.PATH_SOURCE):
+            if file.endswith(self.extension):
+                self.file_list.append(f'{self.PATH_SOURCE}/{file}')
+        #pdb.set_trace()
+        if not os.path.exists(self.PATH_TARGET):
+            os.makedirs(self.PATH_TARGET)
+        #else: return f'Error, the target directory must be empty'
+        self.ROI_list = []
+        self.load_ROIs()
+                        
+    def __image_open__(self, i, flag=0):
+        """
+        Open picture
+        flag: 0 for file, 1 for ROI
+        """
+        if flag == 0: img = f'{self.file_list[i]}'
+        elif flag == 1: img = f'{self.ROI_list[i]}'
+        return cv2.imread(img, -1)#keep img as-is: 16bit tiff
+    
+    def load_ROIs(self):
+        for file in os.listdir(self.PATH_TARGET):
+            if file.endswith(self.extension):
+                self.ROI_list.append(f'{self.PATH_TARGET}/{file}')
+
+    def save(self, namefile, var):
+        """
+        Save Calibration to pickle file.
+        """
+        with open(namefile + '.pkl', 'wb') as f:
+            pickle.dump(var, f,  pickle.DEFAULT_PROTOCOL)
+            #use default protocol to make it compatible with python 3.4 and followings
+        return f'Saved'
+
+    def load(self, namefile, var):
+        """
+        Load Calibration from pickle file
+        """
+        with open(namefile + '.pkl', 'rb') as f:
+            var = eval(repr(pickle.load(f)))
+
+class Calibrate(Files):
+    def __init__(self, source='./Calibration/1d', target = f'./Calibration/1d/ROI', extension='.tif'):
+        General(source, target, extension)
+    def __write_comments__
+    def __dose_input__
+    def __image_selector__
+    
+    def ROI_single
+    def toggle_selector
+    def position
+    def calibrate
+    
+    
+class Fit:
+    def __init__
+    def plot
+    def fit
+
+class Analysis:
+    def OD
+    def OD_avg
+    def OD_plot
+    def Dose

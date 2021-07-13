@@ -387,7 +387,7 @@ class Fitting(Files,Analysis):
         #print(len(mean), len(Axis))
         fig, ax = plt.subplots()
         #plt.hist(mean.ravel(), bins=1000)
-        ax.plot(Axis, mean, label=f'Profile Test')
+        ax.plot(Axis, mean, label=f'Profile Test', marker=',')
         ax.set_title('Dose Profile')
         ax.set_xlabel(f'Pixel [px] ({axis_} axis)')
         ax.set_ylabel(f'Dose [Gy]')
