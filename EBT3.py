@@ -392,13 +392,19 @@ class Fitting(Files,Analysis):
         #plt.hist(mean.ravel(), bins=1000)
         ax.plot(Axis, mean, label=f'Profile Test', marker=',')
         ax.set_title('Dose Profile')
+        #TODO: set the following in mm after getting the mm/px conversion, otherwise leave as px
         ax.set_xlabel(f'Pixel [px] ({axis_} axis)')
         ax.set_ylabel(f'Dose [Gy]')
         ax.legend()
         if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}_{axis_}-axis.png', dpi=600)
         if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}_{axis_}-axis.png', dpi=600)
         plt.show()
+        self.x = Axis
+        self.y = mean
 
+    def save_plot(self, filename='plot'):
+        out = np.array([self.x, self.y])
+        np.savetxt(f'{self.PATH_out}/{filename}.csv', out, delimiter=",")
 
     def toggle_selector(self, event):
         if event.key in ['Q', 'q']:# and toggle_selector.RS.active:
