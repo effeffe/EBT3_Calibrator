@@ -11,6 +11,7 @@
 - place Rectangular  Region selector within a class
 - Implement(allow) opening of 8bit images?
 - __FIX__ file savings to avoid overwritings
+- ADD Rotation of RectangularSelector in Fit.dose_profile()
 
 ## Analysis
 - Add interpolation of calibrations
