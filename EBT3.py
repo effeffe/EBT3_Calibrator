@@ -389,8 +389,8 @@ class Fitting(Files,Analysis):
         ax.plot(Axis, mean, label=f'Test on {axis} axis')
         ax.set_title('Profile')
         ax.legend()
-        if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}.png', dpi=600)
-        if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}.png', dpi=600)
+        if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}_{axis_}-axis.png', dpi=600)
+        if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}_{axis_}-axis.png', dpi=600)
         plt.show()
 
 
