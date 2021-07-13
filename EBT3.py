@@ -274,12 +274,12 @@ class Fitting(Files,Analysis):
         plt.savefig(f'{self.PATH_out}/{self.time}.png', dpi=600)
         plt.show()
 
-    def fit_plot(self, samples=1000, x_min=None, x_max=None ):
+    def fit_plot(self, samples=1000, x_min=None, x_max=None, zero_weight=1000):
         """
         Plot the fitting
         """
         #c, stats = np.polynomial.polynomial.polyfit(self.Array[0], self.Array[1], 2, full=True)
-        c = self.fit()
+        c = self.fit(zero_weight)
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
         ax.plot(self.Array[0], self.Array[1], 'rx', label=f'{self.time} developing time')
@@ -298,12 +298,15 @@ class Fitting(Files,Analysis):
         plt.savefig(f'{self.PATH_out}/Fitting_{self.time}.png', dpi=600)
         plt.show()
 
-    def fit(self):
+    def fit(self, zero=1000):
         """
         Fit the data to extract the proper calibration of the EBT3
         NOTE: the calibration is specific to the acquisition instrument used
         """
-        self.Data = np.polyfit(self.Array[0], self.Array[1], 2)
+        weight = np.ones(len(self.Array[0]))
+        i = np.where(self.Array[1]==0)[0][0]
+        weight[i] = zero
+        self.Data = np.polyfit(self.Array[0], self.Array[1], 2, w=weight)
         return self.Data
 
     def dose(self, i, colour=2, roi=0):
