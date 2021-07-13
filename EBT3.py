@@ -9,9 +9,10 @@
 Released under GPLv3 and followings
 """
 
+from matplotlib.widgets import RectangleSelector
+from sys import stdin
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector
 import cv2
 import math
 import array
@@ -86,20 +87,20 @@ class Files:
             self.Data = eval(repr(pickle.load(f)))
 
 class Analysis:
-    def OD(self, i, type=int(2), roi=1):
+    def OD(self, i, type=int(2), roi=2):
         """
         Calculate Optical density of a ROI
 
         Parameters
         ----------
         i: int, the index of the image in the file_list list
-        type: int, the color channel to use. 2 is red, 1 is green, 0 is blue
+        type: int, the colour channel to use. 2 is red, 1 is green, 0 is blue
         Returns Optical Density
         """
-        #TODO: add possible modification of image color depth
+        #TODO: add possible modification of image colour depth
         im = self.__image_open__(i, roi)
         if im.dtype != 'uint16':
-            return f'Error, image is not 16bit color depth'
+            raise TypeError('The selected image is not 16bit per channel')
         channelImage  = im[:,:,type]
         OD = np.log10(65535.0/channelImage)
         return OD
@@ -223,7 +224,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.ROI_data = [int(x1),int(y1),int(x2),int(y2)]
         return None
 
-    def calibrate(self, ROI=0, time='1d', instrument=None, location=None, comments=None, color=int(2)):
+    def calibrate(self, ROI=0, time='1d', instrument=None, location=None, comments=None, colour=int(2)):
         """
         Process all files, extract ROIs and their OD, then save it to a dictionary
         Parameters
@@ -238,7 +239,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         while i < len(self.file_list):
             self.Data[i] = []
             if ROI == 0: self.ROI_single(index)
-            self.Data[i].append(self.OD_avg(self.OD(index, color)))
+            self.Data[i].append(self.OD_avg(self.OD(index, colour)))
             self.Data[i].append(float(self.__dose_input__(index)))
             i,index = self.__image_selector__(i,index)
         return self.Data
@@ -305,13 +306,16 @@ class Fitting(Files,Analysis):
         self.Data = np.polyfit(self.Array[0], self.Array[1], 2)
         return self.Data
 
-    def dose(self, i, roi=0):
-        OD = self.OD(i, roi)
+    def dose(self, i, colour=2, roi=0):
+        OD = self.OD(i, colour, roi)
         Dose = self.Data[0]*(OD**2)+self.Data[1]*(np.abs(OD))+self.Data[2]
         return Dose
 
     def dose_map(self, i, list=0):
-        #need to implement possible selection of area to analyse
+        """
+
+        """
+        #need to implement possible selection of area to analyse > do in Fitting.dose_profile()
         """
         if list == 0: dose = self.dose(i, list)
         elif list == 1: dose = self.dose(i, list)
@@ -324,17 +328,102 @@ class Fitting(Files,Analysis):
         plt.show()
 
     def dose_hist(self, i, list=0):
+        """
+        Create histogram of dose: bins (occourrences) vs dose
+        """
         dose = self.dose(i, list)
         fig = plt.subplots()
         n = plt.hist(dose.ravel(), bins=1000)
         plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
         plt.show()
 
-    #the following replace some inherited functions
+    def dose_profile(self, i, colour=2, list=0, axis_=None):
+        """
+        fig = plt.subplots()
+        n = plt.hist(dose.ravel(), bins=1000)
+        plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
+        plt.show()
+        #"""
+        """
+        Pseudocode:
+        open image, select rectangular region, creat ehistogram with average px, then plot profile (after an Enter key?)
+        """
+        dose = self.dose(i, colour, list)
+        fix, current_ax = plt.subplots()
+        plt.imshow(dose)
+
+        #Select rectangular region
+        toggle_selector.RS = RectangleSelector(current_ax, self.position,
+            drawtype='box', useblit=True, button=[1, 3],  # don't use middle button
+            minspanx=5, minspany=5, spancoords='pixels', interactive=True)
+        plt.connect('key_press_event', self.toggle_selector)
+        plt.show()
+
+        x1,y1,x2,y2 = self.coords_data
+        profile = dose[y1:y2, x1:x2]
+
+        #select averaging axis
+        #TODO: could replace this by averaging automatically on the short axis, unless specified otherwise
+        if axis_ is None:
+            print(f'Enter the axis (x or y) on which to average: ')#user input: x or y
+            axis_ = stdin.read(1)
+        if axis_ in ['X', 'x']:
+            axis = 0
+            start = x1
+            stop = x2
+        elif axis_ in ['Y', 'y']:
+            axis = 1
+            start = y1
+            stop = y2
+        """
+        print(len(profile), len(profile[0]))
+        # i.e. x,y
+        a = np.mean(profile, 0)# average over x, len as y
+        b = np.mean(profile, 1)# average over y, len as x
+        #"""
+        mean = np.mean(profile, axis)
+        Axis = np.linspace(start, stop, num = len(mean), endpoint=True)
+        #print(len(mean), len(Axis))
+        fig, ax = plt.subplots()
+        #plt.hist(mean.ravel(), bins=1000)
+        ax.plot(Axis, mean, label=f'Test on {axis} axis')
+        ax.set_title('Profile')
+        ax.legend()
+        if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}.png', dpi=600)
+        if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}.png', dpi=600)
+        plt.show()
+
+
+    def toggle_selector(self, event):
+        if event.key in ['Q', 'q']:# and toggle_selector.RS.active:
+            print('RectangleSelector deactivated, exiting...')
+            toggle_selector.RS.set_active(False)
+        if event.key in ['D', 'd']:# and toggle_selector.RS.active:
+            print('RectangleSelector deactivated.')
+            toggle_selector.RS.set_active(False)
+        if event.key in ['A', 'a']:# and not toggle_selector.RS.active:
+            print('RectangleSelector activated.')
+            toggle_selector.RS.set_active(True)
+
+    #MatPlotLib stuff, as in https://matplotlib.org/2.0.2/examples/widgets/rectangle_selector.html
+    def position(self, eclick, erelease):
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        #write to this because toggle_selector.RS does not return anything
+        self.coords_data = [int(x1),int(y1),int(x2),int(y2)]
+        return None
+
+    #the two followings replace some inherited functions
     def load(self, namefile):
+        """
+        load numpy array with Fitting data
+        """
         self.Data = np.load(namefile + '.npy')
 
     def save(self, namefile):
+        """
+        save numpy Array with Fitting data
+        """
         np.save(namefile, self.Data)
 
 
