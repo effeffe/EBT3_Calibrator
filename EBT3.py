@@ -87,7 +87,7 @@ class Files:
             self.Data = eval(repr(pickle.load(f)))
 
 class Analysis:
-    def OD(self, i, type=int(2), roi=2):
+    def OD(self, i, colour=int(2), roi=2):
         """
         Calculate Optical density of a ROI
 
@@ -101,7 +101,7 @@ class Analysis:
         im = self.__image_open__(i, roi)
         if im.dtype != 'uint16':
             raise TypeError('The selected image is not 16bit per channel')
-        channelImage  = im[:,:,type]
+        channelImage  = im[:,:,colour]
         OD = np.log10(65535.0/channelImage)
         return OD
 
@@ -337,16 +337,17 @@ class Fitting(Files,Analysis):
         plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
         plt.show()
 
-    def dose_profile(self, i, colour=2, list=0, axis_=None):
+    def dose_profile(self, i, list=0, colour=2, axis_=None):
         """
-        fig = plt.subplots()
-        n = plt.hist(dose.ravel(), bins=1000)
-        plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
-        plt.show()
-        #"""
-        """
-        Pseudocode:
-        open image, select rectangular region, creat ehistogram with average px, then plot profile (after an Enter key?)
+        Plot the dose profile of a region of the specified image.
+        The resulting profile is then saved to the PATH_out folder
+
+        Parameters
+        ----------
+        i: int, index of the image in the list
+        list: int, 0 or 1, select which image list to use: files(0) or ROI(1)
+        colour: int, 0,1,2, see Analysis.OD
+        axis_: str, the axis over which to average (x, X, y or Y)
         """
         dose = self.dose(i, colour, list)
         fix, current_ax = plt.subplots()
@@ -386,8 +387,10 @@ class Fitting(Files,Analysis):
         #print(len(mean), len(Axis))
         fig, ax = plt.subplots()
         #plt.hist(mean.ravel(), bins=1000)
-        ax.plot(Axis, mean, label=f'Test on {axis} axis')
-        ax.set_title('Profile')
+        ax.plot(Axis, mean, label=f'Profile Test')
+        ax.set_title('Dose Profile')
+        ax.set_xlabel(f'Pixel [px] ({axis_} axis)')
+        ax.set_ylabel(f'Dose [Gy]')
         ax.legend()
         if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}_{axis_}-axis.png', dpi=600)
         if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}_{axis_}-axis.png', dpi=600)
