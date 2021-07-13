@@ -8,6 +8,9 @@
 - definitely, add circular selection
 - ~~add additional comments to the calibration~~ -> DONE
 - Add auxiliary class? -> Not necessary
+- place Rectangular  Region selector within a class
+- Implement(allow) opening of 8bit images?
+- __FIX__ file savings to avoid overwritings
 
 ## Analysis
 - Add interpolation of calibrations
