@@ -163,12 +163,12 @@ class Calibrate(Files,Analysis):
             elif isinstance(i, float):
                 index += 1
                 i = eval(repr(index))
-            pdb.set_trace()
+            #pdb.set_trace()
         elif selector in ['N','n']:
             if isinstance(i, int):
                 index = i
             i = round(i+0.001,3)
-            pdb.set_trace()
+            #pdb.set_trace()
         #print(i,index)
         return [i, index]
 
@@ -204,8 +204,8 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         ROI = image[y1:y2, x1:x2]
         ROI_small = cv2.resize(ROI, (600, 600))#Resize picture to fit into screen
         cv2.imshow(f'ROI {i}',ROI_small)
-        cv2.imwrite(f'{self.PATH[1]}/ROI_{i}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
-        self.ROI_list.append(f'{self.PATH[1]}/ROI_{self.file_list[i]}')
+        cv2.imwrite(f'{self.PATH[1]}/ROI_{self.file_list[i]}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
+        self.ROI_list.append(f'ROI_{self.file_list[i]}')
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -248,7 +248,7 @@ Did you select the correct one? Do you have enough ROIs available?')
         i = 0
         for index in range:
             while True:
-                pdb.set_trace()
+                #pdb.set_trace()
                 self.Data[i] = []
                 if ROI == 0: self.ROI_single(index)
                 self.Data[i].append(self.OD_avg(self.OD(index, colour=colour, roi=ROI)))
@@ -256,7 +256,7 @@ Did you select the correct one? Do you have enough ROIs available?')
                 old_index = eval(repr(index))
                 i,index = self.__image_selector__(i,index)
                 if index > old_index: break
-                pdb.set_trace()
+                #pdb.set_trace()
         return self.Data
 
 
@@ -335,8 +335,8 @@ class Fitting(Files,Analysis):
 
         """
         #need to implement possible selection of area to analyse > do in Fitting.dose_profile()
-        if list == 0: _filmname = {self.file_list[i]}
-        if list == 1: _filmname = {self.ROI_list[i]}
+        if list == 0: _filmname = self.file_list[i]
+        if list == 1: _filmname = self.ROI_list[i]
         dose = self.dose(i, list)
         fig = plt.subplots()
         plt.imshow(dose)
@@ -348,8 +348,8 @@ class Fitting(Files,Analysis):
         """
         Create histogram of dose: bins (occourrences) vs dose
         """
-        if list == 0: _filmname = {self.file_list[i]}
-        if list == 1: _filmname = {self.ROI_list[i]}
+        if list == 0: _filmname = self.file_list[i]
+        if list == 1: _filmname = self.ROI_list[i]
         dose = self.dose(i, list)
         fig = plt.subplots()
         n = plt.hist(dose.ravel(), bins=1000)
@@ -368,8 +368,8 @@ class Fitting(Files,Analysis):
         colour: int, 0,1,2, see Analysis.OD
         axis_: str, the axis over which to average (x, X, y or Y)
         """
-        if list == 0: _filmname = {self.file_list[i]}
-        if list == 1: _filmname = {self.ROI_list[i]}
+        if list == 0: _filmname = self.file_list[i]
+        if list == 1: _filmname = self.ROI_list[i]
 
         dose = self.dose(i, colour, list)
         fix, current_ax = plt.subplots()
