@@ -25,17 +25,20 @@ def PATH_set(source='./Calibration/1d', target = f'./Calibration/1d/ROI', extens
     return [source, target, extension]
 
 def plot_image(input):
-        plt.figure()
-        plt.imshow(input)
-        plt.show()
-        return None
+    if input.dtype == 'uint16':
+        image_16 = eval(repr(input))
+        input = (image_16/256).astype('uint8')
+    plt.figure()
+    plt.imshow(input)
+    plt.show()
+    return None
 
 def plot_map(input):
-        plt.figure()
-        plt.imshow(input)
-        plt.colorbar()
-        plt.show()
-        return None
+    plt.figure()
+    plt.imshow(input)
+    plt.colorbar()
+    plt.show()
+    return None
 
 def toggle_selector(event):
     """
