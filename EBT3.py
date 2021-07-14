@@ -57,13 +57,14 @@ class Files:
         self.ROI_list = []
         self.load_ROIs()
 
-    def __image_open__(self, i, flag=0):
+    def __image_open__(self, i, list=0):
         """
         Open picture
         flag: 0 for file, 1 for ROI
         """
-        if flag == 0: img = f'{self.PATH[0]}/{self.file_list[i]}'
-        elif flag == 1: img = f'{self.PATH[1]}/{self.ROI_list[i]}'
+        if list == 0: img = f'{self.PATH[0]}/{self.file_list[i]}'
+        elif list == 1: img = f'{self.PATH[1]}/{self.ROI_list[i]}'
+        else: raise IndexError(f'The selected list does not exist')
         return cv2.imread(img, -1)#keep img as-is: 16bit tiff
 
     def load_ROIs(self):
@@ -87,7 +88,7 @@ class Files:
             self.Data = eval(repr(pickle.load(f)))
 
 class Analysis:
-    def OD(self, i, colour=int(2), roi=2):
+    def OD(self, i, colour=int(2), roi=0):
         """
         Calculate Optical density of a ROI
 
@@ -123,7 +124,7 @@ class Calibrate(Files,Analysis):
         Files.__init__(self, source, target, extension)
         Analysis.__init__(self)
 
-    def __write_comments__(self, time, instrument, location, comments):
+    def __write_comments__(self, time, instrument, location, comments, dpi):
         """
         Function to write variables into the calibration dictionary
         """
@@ -132,6 +133,7 @@ class Calibrate(Files,Analysis):
         self.Data['scanning instument'] = instrument
         self.Data['scan location'] = location
         self.Data['comments'] = comments
+        self.Data['dpi'] = dpi
 
     def __dose_input__(self, index):
         """
@@ -161,10 +163,12 @@ class Calibrate(Files,Analysis):
             elif isinstance(i, float):
                 index += 1
                 i = eval(repr(index))
+            pdb.set_trace()
         elif selector in ['N','n']:
             if isinstance(i, int):
                 index = i
             i = round(i+0.001,3)
+            pdb.set_trace()
         #print(i,index)
         return [i, index]
 
@@ -201,7 +205,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         ROI_small = cv2.resize(ROI, (600, 600))#Resize picture to fit into screen
         cv2.imshow(f'ROI {i}',ROI_small)
         cv2.imwrite(f'{self.PATH[1]}/ROI_{i}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
-        self.ROI_list.append(f'{self.PATH[1]}/ROI_{i}.tif')
+        self.ROI_list.append(f'{self.PATH[1]}/ROI_{self.file_list[i]}')
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -224,7 +228,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.ROI_data = [int(x1),int(y1),int(x2),int(y2)]
         return None
 
-    def calibrate(self, ROI=0, time='1d', instrument=None, location=None, comments=None, colour=int(2)):
+    def calibrate(self, ROI=0, time='1d', range=None, instrument=None, location=None, comments=None, dpi=None, colour=int(2)):
         """
         Process all files, extract ROIs and their OD, then save it to a dictionary
         Parameters
@@ -233,15 +237,26 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
 
         Returns a dictionary with the calibration info
         """
-        self.__write_comments__(time, instrument, location, comments)
+        self.__write_comments__(time, instrument, location, comments, dpi)
+        if range is None: range=[*range(len(self.file_list))]
+
+        """
+        if len(range) < len(self.file_list): raise IndexError(f'The list you are selecting data from is too small.\n\
+Did you select the correct one? Do you have enough ROIs available?')
+        """
+
         i = 0
-        index = 0
-        while i < len(self.file_list):
-            self.Data[i] = []
-            if ROI == 0: self.ROI_single(index)
-            self.Data[i].append(self.OD_avg(self.OD(index, colour)))
-            self.Data[i].append(float(self.__dose_input__(index)))
-            i,index = self.__image_selector__(i,index)
+        for index in range:
+            while True:
+                pdb.set_trace()
+                self.Data[i] = []
+                if ROI == 0: self.ROI_single(index)
+                self.Data[i].append(self.OD_avg(self.OD(index, colour=colour, roi=ROI)))
+                self.Data[i].append(float(self.__dose_input__(index)))
+                old_index = eval(repr(index))
+                i,index = self.__image_selector__(i,index)
+                if index > old_index: break
+                pdb.set_trace()
         return self.Data
 
 
@@ -262,6 +277,7 @@ class Fitting(Files,Analysis):
         self.time = data['time']
         self.PATH_out = path_out
         self.Data = np.ndarray(3)
+        self.dpi = data['dpi']
 
     def plot(self):
         fig = plt.figure()
@@ -271,7 +287,7 @@ class Fitting(Files,Analysis):
         ax.set_xlabel('Optical Density')
         ax.set_ylabel('Dose [Gy]')
         ax.legend()
-        plt.savefig(f'{self.PATH_out}/{self.time}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Points_{self.time}.png', dpi=600)
         plt.show()
 
     def fit_plot(self, samples=1000, x_min=None, x_max=None, zero_weight=1000):
@@ -319,25 +335,25 @@ class Fitting(Files,Analysis):
 
         """
         #need to implement possible selection of area to analyse > do in Fitting.dose_profile()
-        """
-        if list == 0: dose = self.dose(i, list)
-        elif list == 1: dose = self.dose(i, list)
-        #"""
+        if list == 0: _filmname = {self.file_list[i]}
+        if list == 1: _filmname = {self.ROI_list[i]}
         dose = self.dose(i, list)
         fig = plt.subplots()
         plt.imshow(dose)
         plt.colorbar()
-        plt.savefig(f'{self.PATH_out}/Dose_plot_{self.file_list[i]}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Dose_plot_{_filename}.png', dpi=600)
         plt.show()
 
     def dose_hist(self, i, list=0):
         """
         Create histogram of dose: bins (occourrences) vs dose
         """
+        if list == 0: _filmname = {self.file_list[i]}
+        if list == 1: _filmname = {self.ROI_list[i]}
         dose = self.dose(i, list)
         fig = plt.subplots()
         n = plt.hist(dose.ravel(), bins=1000)
-        plt.savefig(f'{self.PATH_out}/Dose_hist_{self.file_list[i]}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Dose_hist_{_filename}.png', dpi=600)
         plt.show()
 
     def dose_profile(self, i, list=0, colour=2, axis_=None):
@@ -352,6 +368,9 @@ class Fitting(Files,Analysis):
         colour: int, 0,1,2, see Analysis.OD
         axis_: str, the axis over which to average (x, X, y or Y)
         """
+        if list == 0: _filmname = {self.file_list[i]}
+        if list == 1: _filmname = {self.ROI_list[i]}
+
         dose = self.dose(i, colour, list)
         fix, current_ax = plt.subplots()
         plt.imshow(dose)
@@ -386,18 +405,21 @@ class Fitting(Files,Analysis):
         b = np.mean(profile, 1)# average over y, len as x
         #"""
         mean = np.mean(profile, axis)
-        Axis = np.linspace(start, stop, num = len(mean), endpoint=True)
+        if self.dpi is None: Axis = np.linspace(start, stop, num = len(mean), endpoint=True)
+        elif isinstance(self.dpi, int):
+            mm_px = 25.4/self.dpi #convert px in mm. e.g. 4800dpi gives 0.005mm/px
+            Axis = np.linspace(start*mm_px, stop*mm_px, num = len(mean), endpoint=True)#mm output from 0 mm
         #print(len(mean), len(Axis))
         fig, ax = plt.subplots()
         #plt.hist(mean.ravel(), bins=1000)
-        ax.plot(Axis, mean, label=f'Profile Test', marker=',')
+        ax.plot(Axis, mean, label=f'Film {_filmname}', marker=',')
         ax.set_title('Dose Profile')
         #TODO: set the following in mm after getting the mm/px conversion, otherwise leave as px
-        ax.set_xlabel(f'Pixel [px] ({axis_} axis)')
+        if self.dpi is None: ax.set_xlabel(f'Pixel [px] ({axis_} axis)')
+        elif isinstance(self.dpi, int): ax.set_xlabel(f'Distance [mm] ({axis_} axis)')
         ax.set_ylabel(f'Dose [Gy]')
         ax.legend()
-        if list == 0: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.file_list[i]}_{axis_}-axis.png', dpi=600)
-        if list == 1: plt.savefig(f'{self.PATH_out}/Dose_profile_{self.ROI_list[i]}_{axis_}-axis.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Dose_profile_{_filmname}_{axis_}-axis.png', dpi=600)
         plt.show()
         self.x = Axis
         self.y = mean
