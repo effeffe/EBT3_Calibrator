@@ -204,7 +204,7 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         ROI = image[y1:y2, x1:x2]
         ROI_small = cv2.resize(ROI, (600, 600))#Resize picture to fit into screen
         cv2.imshow(f'ROI {i}',ROI_small)
-        cv2.imwrite(f'{self.PATH[1]}/ROI_{self.file_list[i]}.tif',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
+        cv2.imwrite(f'{self.PATH[1]}/ROI_{self.file_list[i]}',ROI, ((int(cv2.IMWRITE_TIFF_COMPRESSION), 1)))
         self.ROI_list.append(f'ROI_{self.file_list[i]}')
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -341,7 +341,7 @@ class Fitting(Files,Analysis):
         fig = plt.subplots()
         plt.imshow(dose)
         plt.colorbar()
-        plt.savefig(f'{self.PATH_out}/Dose_plot_{_filename}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Dose_plot_{_filmname}.png', dpi=600)
         plt.show()
 
     def dose_hist(self, i, list=0):
@@ -353,7 +353,7 @@ class Fitting(Files,Analysis):
         dose = self.dose(i, list)
         fig = plt.subplots()
         n = plt.hist(dose.ravel(), bins=1000)
-        plt.savefig(f'{self.PATH_out}/Dose_hist_{_filename}.png', dpi=600)
+        plt.savefig(f'{self.PATH_out}/Dose_hist_{_filmname}.png', dpi=600)
         plt.show()
 
     def dose_profile(self, i, list=0, colour=2, axis_=None):
@@ -371,9 +371,10 @@ class Fitting(Files,Analysis):
         if list == 0: _filmname = self.file_list[i]
         if list == 1: _filmname = self.ROI_list[i]
 
-        dose = self.dose(i, colour, list)
+        image = self.__image_open__(i, list)
+        image_8 = (image/256).astype('uint8')
         fix, current_ax = plt.subplots()
-        plt.imshow(dose)
+        plt.imshow(image_8)
 
         #Select rectangular region
         toggle_selector.RS = RectangleSelector(current_ax, self.position,
@@ -383,6 +384,7 @@ class Fitting(Files,Analysis):
         plt.show()
 
         x1,y1,x2,y2 = self.coords_data
+        dose = self.dose(i, colour, list)
         profile = dose[y1:y2, x1:x2]
 
         #select averaging axis
