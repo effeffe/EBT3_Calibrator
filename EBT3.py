@@ -25,9 +25,11 @@ def PATH_set(source='./Calibration/1d', target = f'./Calibration/1d/ROI', extens
     return [source, target, extension]
 
 def plot_image(input):
+    #convert image to 8bit if input is 16bit
     if input.dtype == 'uint16':
         image_16 = eval(repr(input))
         input = (image_16/256).astype('uint8')
+
     plt.figure()
     plt.imshow(input)
     plt.show()
@@ -68,7 +70,12 @@ class Files:
         if list == 0: img = f'{self.PATH[0]}/{self.file_list[i]}'
         elif list == 1: img = f'{self.PATH[1]}/{self.ROI_list[i]}'
         else: raise IndexError(f'The selected list does not exist')
-        return cv2.imread(img, -1)#keep img as-is: 16bit tiff
+        image = cv2.imread(img, -1)#keep img as-is: 16bit tiff or else
+        if image.dtype == 'uint8':
+            image_8 = image
+        elif image.dtype == 'uint16':
+            image_8 = (image/256).astype('uint8')
+        return image,image_8
 
     def load_ROIs(self):
         for file in os.listdir(self.PATH[1]):
@@ -102,11 +109,14 @@ class Analysis:
         Returns Optical Density
         """
         #TODO: add possible modification of image colour depth
-        im = self.__image_open__(i, roi)
-        if im.dtype != 'uint16':
-            raise TypeError('The selected image is not 16bit per channel')
-        channelImage  = im[:,:,colour]
-        OD = np.log10(65535.0/channelImage)
+        image = self.__image_open__(i, roi)
+        channelImage  = image[:,:,colour]
+        #apply different OD by image color depth.
+        #IDEA: could do automatic processing using round(float(2^bit)-1,1)
+        if image.dtype == 'uint16':
+            OD = np.log10(65535.0/channelImage)
+        elif image.dtype == 'uint8':
+            OD = np.log10(255.0/channelImage)
         return OD
 
     def OD_avg(self, OD):
@@ -187,8 +197,7 @@ class Calibrate(Files,Analysis):
         ----------
         i: int, the index of the image in the file_list list
         """
-        image = self.__image_open__(i)
-        image_8 = (image/256).astype('uint8')
+        image,image_8 = self.__image_open__(i)
         fig, current_ax = plt.subplots()
         plt.imshow(image_8)
         print(f'Select ROI, then press q to close the Window\n\
@@ -374,8 +383,10 @@ class Fitting(Files,Analysis):
         if list == 0: _filmname = self.file_list[i]
         if list == 1: _filmname = self.ROI_list[i]
 
-        image = self.__image_open__(i, list)
-        image_8 = (image/256).astype('uint8')
+        #could do:
+        #image,image_8 = self.__image_open__(i)
+        #where __image_open__ generates image_8
+        image,image_8 = self.__image_open__(i)
         fix, current_ax = plt.subplots()
         plt.imshow(image_8)
 
