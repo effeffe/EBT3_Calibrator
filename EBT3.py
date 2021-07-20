@@ -62,13 +62,13 @@ class Files:
         self.ROI_list = []
         self.load_ROIs()
 
-    def __image_open__(self, i, list=0):
+    def __image_open__(self, i, roi=0):
         """
         Open picture
         flag: 0 for file, 1 for ROI
         """
-        if list == 0: img = f'{self.PATH[0]}/{self.file_list[i]}'
-        elif list == 1: img = f'{self.PATH[1]}/{self.ROI_list[i]}'
+        if roi == 0: img = f'{self.PATH[0]}/{self.file_list[i]}'
+        elif roi == 1: img = f'{self.PATH[1]}/{self.ROI_list[i]}'
         else: raise IndexError(f'The selected list does not exist')
         image = cv2.imread(img, -1)#keep img as-is: 16bit tiff or else
         if image.dtype == 'uint8':
@@ -342,33 +342,33 @@ class Fitting(Files,Analysis):
         Dose = self.Data[0]*(OD**2)+self.Data[1]*(np.abs(OD))+self.Data[2]
         return Dose
 
-    def dose_map(self, i, list=0):
+    def dose_map(self, i, roi=0):
         """
 
         """
         #need to implement possible selection of area to analyse > do in Fitting.dose_profile()
-        if list == 0: _filmname = self.file_list[i]
-        if list == 1: _filmname = self.ROI_list[i]
-        dose = self.dose(i, list)
+        if roi == 0: _filmname = self.file_list[i]
+        if roi == 1: _filmname = self.ROI_list[i]
+        dose = self.dose(i, roi)
         fig = plt.subplots()
         plt.imshow(dose)
         plt.colorbar()
         plt.savefig(f'{self.PATH_out}/Dose_plot_{_filmname}.png', dpi=600)
         plt.show()
 
-    def dose_hist(self, i, list=0):
+    def dose_hist(self, i, roi=0):
         """
         Create histogram of dose: bins (occourrences) vs dose
         """
-        if list == 0: _filmname = self.file_list[i]
-        if list == 1: _filmname = self.ROI_list[i]
-        dose = self.dose(i, list)
+        if roi == 0: _filmname = self.file_list[i]
+        if roi == 1: _filmname = self.ROI_list[i]
+        dose = self.dose(i, roi)
         fig = plt.subplots()
         n = plt.hist(dose.ravel(), bins=1000)
         plt.savefig(f'{self.PATH_out}/Dose_hist_{_filmname}.png', dpi=600)
         plt.show()
 
-    def dose_profile(self, i, list=0, colour=2, axis_=None):
+    def dose_profile(self, i, roi=0, colour=2, axis_=None):
         """
         Plot the dose profile of a region of the specified image.
         The resulting profile is then saved to the PATH_out folder
@@ -380,13 +380,10 @@ class Fitting(Files,Analysis):
         colour: int, 0,1,2, see Analysis.OD
         axis_: str, the axis over which to average (x, X, y or Y)
         """
-        if list == 0: _filmname = self.file_list[i]
-        if list == 1: _filmname = self.ROI_list[i]
+        if roi == 0: _filmname = self.file_list[i]
+        if roi == 1: _filmname = self.ROI_list[i]
 
-        #could do:
-        #image,image_8 = self.__image_open__(i)
-        #where __image_open__ generates image_8
-        image,image_8 = self.__image_open__(i)
+        image,image_8 = self.__image_open__(i, roi)
         fix, current_ax = plt.subplots()
         plt.imshow(image_8)
 
@@ -398,7 +395,7 @@ class Fitting(Files,Analysis):
         plt.show()
 
         x1,y1,x2,y2 = self.coords_data
-        dose = self.dose(i, colour, list)
+        dose = self.dose(i, colour, roi)
         profile = dose[y1:y2, x1:x2]
 
         #select averaging axis
