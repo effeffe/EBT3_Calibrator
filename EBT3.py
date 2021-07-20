@@ -273,8 +273,8 @@ Did you select the correct one? Do you have enough ROIs available?')
 
 
 class Fitting(Files,Analysis):
-    def __init__(self, data, source='Calibration/1d', ROI='Calibration/ROI', path_out='Calibration/Fit'):
-        Files.__init__(self, source, ROI, '.tif')
+    def __init__(self, data, source='Calibration/1d', target='Calibration/1d/ROI', path_out='Calibration/1d/Fit'):
+        Files.__init__(self, source, target, '.tif')
         Analysis.__init__(self)
         OD = []
         Dose = []
