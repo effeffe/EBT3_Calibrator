@@ -126,5 +126,5 @@ reuse code from [Fitting recall](#44-fitting-recall), then add the following:
 ```
 f.dose_map(4)
 f.dose_hist(4)
-f.dose_profile(4,list=0,axis_='x')
+f.dose_profile(4,roi=0,axis_='x')
 ```
