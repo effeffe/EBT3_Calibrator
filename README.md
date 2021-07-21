@@ -5,6 +5,7 @@
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
 3. [Usage](#3-usage)
+4. [Example Code](#4-example-code)
 
 ## 1. Introduction
 This software was written as a part of a summer project organised by Dr Tony Price at thee University of Birmingham. The software is written by Filippo Faleza (© 2021) and released under GNU General Public License v3 and followings.
@@ -83,7 +84,7 @@ The images are called using their index in each list:
 
 All the functions that take the image index as an argument also accept the `roi` argument (usually in second position):
 ```function(i, roi)```
-where `i` is the index in the list, and `roi` specifies whether to use `file_list` (roi=0) or the `ROI_list` (roi=1).
+where `i` is the index in the list, and `roi` specifies whether to use `file_list` (`roi=0`) or the `ROI_list` (`roi=1`).
 
 ## 4. Example Code
 ### 4.1 Initial Data collection
