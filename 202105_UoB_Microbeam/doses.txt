@@ -1,21 +1,21 @@
-Film 1, Calibration, 2.00 Gy.
-Film 2, Microbeam, 5.01 Gy, 4.6 mm buildup
-Film 3, Calibration, 3.02 Gy
-Film 4, Calibration, 6.98 Gy
-Film 5, Microbeam, 5.08 Gy, 2.88 mm buildup
-Film 7, Microbeam, 5.03 Gy, 3.84 mm buildup
-Film 9, Microbeam, 5.02 Gy, 0 mm buildup
-Film 10, Calibration, 6.01 Gy
-Film 11, Calibration, 0 Gy
-Film 14, Calibration, 2.09 Gy (Known error)
-Film 15, Calibration, 9.01 Gy
-Film 17, Calibration, 1.02 Gy
-Film 18, Calibration, 10.05 Gy
-Film 19, Calibration, 4.98 Gy
-Film 20, Calibration, 4.04 Gy
-Film 21, Calibration, 0.500 Gy
-Film 22, Calibration, 8.014 Gy
-Film 23, Microbeam, 5.04 Gy, 1.94 mm buildup
-Film 24, Microbeam, 4.98 Gy, 5.78 mm buildup
+0   Film 1, Calibration, 2.00 Gy.
+1   Film 2, Microbeam, 5.01 Gy, 4.6 mm buildup
+2   Film 3, Calibration, 3.02 Gy
+3   Film 4, Calibration, 6.98 Gy
+4   Film 5, Microbeam, 5.08 Gy, 2.88 mm buildup
+5   Film 7, Microbeam, 5.03 Gy, 3.84 mm buildup
+6   Film 9, Microbeam, 5.02 Gy, 0 mm buildup
+7   Film 10, Calibration, 6.01 Gy
+8   Film 11, Calibration, 0 Gy
+9   Film 14, Calibration, 2.09 Gy (Known error)
+10  Film 15, Calibration, 9.01 Gy
+11  Film 17, Calibration, 1.02 Gy
+12  Film 18, Calibration, 10.05 Gy
+13  Film 19, Calibration, 4.98 Gy
+14  Film 20, Calibration, 4.04 Gy
+15  Film 21, Calibration, 0.500 Gy
+16  Film 22, Calibration, 8.014 Gy
+17  Film 23, Microbeam, 5.04 Gy, 1.94 mm buildup
+18  Film 24, Microbeam, 4.98 Gy, 5.78 mm buildup
 4:00
 films were scanned at 4800 dpi, so each pixel is 25.4/4800 mm 
