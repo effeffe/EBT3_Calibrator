@@ -98,7 +98,7 @@ class Files:
             self.Data = eval(repr(pickle.load(f)))
 
 class Analysis:
-    def OD(self, i, colour=int(2), roi=0):
+    def OD(self, i, roi=0, colour=int(2)):
         """
         Calculate Optical density of a ROI
 
@@ -109,7 +109,7 @@ class Analysis:
         Returns Optical Density
         """
         #TODO: add possible modification of image colour depth
-        image = self.__image_open__(i, roi)
+        image = self.__image_open__(i, roi)[0]
         channelImage  = image[:,:,colour]
         #apply different OD by image color depth.
         #IDEA: could do automatic processing using round(float(2^bit)-1,1)
@@ -263,7 +263,7 @@ Did you select the correct one? Do you have enough ROIs available?')
                 #pdb.set_trace()
                 self.Data[i] = []
                 if ROI == 0: self.ROI_single(index)
-                self.Data[i].append(self.OD_avg(self.OD(index, colour=colour, roi=ROI)))
+                self.Data[i].append(self.OD_avg(self.OD(index, roi, colour)))
                 self.Data[i].append(float(self.__dose_input__(index)))
                 old_index = eval(repr(index))
                 i,index = self.__image_selector__(i,index)
@@ -337,19 +337,19 @@ class Fitting(Files,Analysis):
         self.Data = np.polyfit(self.Array[0], self.Array[1], 2, w=weight)
         return self.Data
 
-    def dose(self, i, colour=2, roi=0):
-        OD = self.OD(i, colour, roi)
+    def dose(self, i, roi=0, colour=2):
+        OD = self.OD(i, roi, colour)
         Dose = self.Data[0]*(OD**2)+self.Data[1]*(np.abs(OD))+self.Data[2]
         return Dose
 
-    def dose_map(self, i, roi=0):
+    def dose_map(self, i, roi=0, colour=2):
         """
 
         """
         #need to implement possible selection of area to analyse > do in Fitting.dose_profile()
         if roi == 0: _filmname = self.file_list[i]
         if roi == 1: _filmname = self.ROI_list[i]
-        dose = self.dose(i, roi)
+        dose = self.dose(i, roi, colour)
         fig = plt.subplots()
         plt.imshow(dose)
         plt.colorbar()
@@ -395,7 +395,7 @@ class Fitting(Files,Analysis):
         plt.show()
 
         x1,y1,x2,y2 = self.coords_data
-        dose = self.dose(i, colour, roi)
+        dose = self.dose(i, roi, colour)
         profile = dose[y1:y2, x1:x2]
 
         #select averaging axis
