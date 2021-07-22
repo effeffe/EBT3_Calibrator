@@ -123,8 +123,11 @@ class Analysis:
         """
         Averages the OD over the ROI area
         """
-        #Could replace with np.avg?
-        return np.sum(OD)/(len(OD)*len(OD[0]))
+        #return np.sum(OD)/(len(OD)*len(OD[0]))
+        #use the following as the above doesn't handle infinity
+        #this removes infinity values from the calculation
+        return np.mean(OD[np.isfinite(OD)])
+
 
     def Dose(self, OD):
         return self.coeff[0]*(OD**2)+self.coeff[1]*(np.abs(OD))+self.coeff[2]
@@ -240,7 +243,11 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
         self.ROI_data = [int(x1),int(y1),int(x2),int(y2)]
         return None
 
-    def calibrate(self, ROI=0, time='1d', range=None, instrument=None, location=None, comments=None, dpi=None, colour=int(2)):
+    def ROI_all(self):
+        for i in self.file_list:
+            self.ROI_single(i)
+
+    def calibrate(self, roi=0, time='1d', range=None, instrument=None, location=None, comments=None, dpi=None, colour=int(2), dose_file=None):
         """
         Process all files, extract ROIs and their OD, then save it to a dictionary
         Parameters
@@ -257,13 +264,19 @@ The program shows a squared selected ROI, but the final image won\'t be like tha
 Did you select the correct one? Do you have enough ROIs available?')
         """
 
-        i = 0
+        #could use int(round(i,0)) so that 3.001 becomes 3
+        #i = 0
         for index in range:
             while True:
+                i = int(round(index,0))
                 #pdb.set_trace()
                 self.Data[i] = []
-                if ROI == 0: self.ROI_single(index)
+                if roi == 0: self.ROI_single(index)
                 self.Data[i].append(self.OD_avg(self.OD(index, roi, colour)))
+                #if dose_file is not None:
+                #    file = open(dose_file,r)
+                #
+                #else: self.Data[i].append(float(self.__dose_input__(index)))
                 self.Data[i].append(float(self.__dose_input__(index)))
                 old_index = eval(repr(index))
                 i,index = self.__image_selector__(i,index)
