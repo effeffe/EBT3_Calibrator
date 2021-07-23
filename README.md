@@ -42,7 +42,7 @@ c = Calibrate()
 range_ = [2,3,*range(7,17)]
 
 #run the calibration
-c.calibrate(ROI=0, time='48h', range=range_, instrument='Epson Expression 10000XL', location='NPL', comments='Irradiated at the MC40 cyclotron at the University of Birmingham; Scanned by Sam Flynn at NPL', colour=2)
+c.calibrate(roi=0, time='48h', range=range_, instrument='Epson Expression 10000XL', location='NPL', comments='Irradiated at the MC40 cyclotron at the University of Birmingham; Scanned by Sam Flynn at NPL', colour=2)
 #save the calibration to Calibration_saved.pkl for future use
 c.save('Calibration_saved')
 ```
@@ -95,7 +95,7 @@ c = Calibrate('Calibration','Calibration/ROI')
 range_ = [2,3,*range(7,17)]
 
 #run the calibration
-c.calibrate(ROI=0, time='48h', range=range_, instrument='Epson Expression 10000XL', location='NPL', comments='Irradiated at the MC40 cyclotron at the University of Birmingham; Scanned by Sam Flynn at NPL', colour=2)
+c.calibrate(roi=0, time='48h', range=range_, instrument='Epson Expression 10000XL', location='NPL', comments='Irradiated at the MC40 cyclotron at the University of Birmingham; Scanned by Sam Flynn at NPL', colour=2)
 #save the calibration to Calibration_saved.pkl for future use
 c.save(f'{c.PATH[0]}/Calibration_saved')
 ```
